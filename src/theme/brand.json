@@ -1,0 +1,112 @@
+{
+  "brand": {
+    "name": "VoiceCV",
+    "tagline": "Speak Once. Land the Job.",
+    "mission": "To democratize professional branding by turning the human voice into career-ready assets.",
+    "vision": "A world where every individual can express their professional value effortlessly, without the barrier of writing.",
+    "personality": ["Empowering", "Intelligent", "Approachable", "Premium", "Human"],
+    "tone": "Confident, clear, and encouraging."
+  },
+  "colors": {
+    "dark": {
+      "background": "#0D0B1F",
+      "surface": {
+        "base": "rgba(255, 255, 255, 0.03)",
+        "hover": "rgba(255, 255, 255, 0.06)",
+        "active": "rgba(255, 255, 255, 0.1)"
+      },
+      "accent": {
+        "primary": "#7C3AED",
+        "secondary": "#F59E0B",
+        "glow": "rgba(124, 58, 237, 0.5)"
+      },
+      "text": {
+        "primary": "#FFFFFF",
+        "secondary": "#94A3B8",
+        "muted": "#64748B",
+        "inverse": "#0D0B1F"
+      },
+      "status": {
+        "recording": "#F59E0B",
+        "success": "#10B981",
+        "error": "#EF4444",
+        "warning": "#F59E0B"
+      },
+      "border": {
+        "default": "rgba(255, 255, 255, 0.08)",
+        "focus": "#7C3AED"
+      },
+      "shadow": {
+        "base": "0 8px 32px 0 rgba(0, 0, 0, 0.4)",
+        "accent": "0 0 20px rgba(124, 58, 237, 0.3)"
+      }
+    }
+  },
+  "typography": {
+    "fonts": {
+      "display": "Syne",
+      "body": "Plus Jakarta Sans",
+      "mono": "JetBrains Mono"
+    },
+    "scale": {
+      "h1": { "size": "80px", "lineHeight": "0.9", "letterSpacing": "-0.04em", "weight": 800 },
+      "h2": { "size": "48px", "lineHeight": "1.0", "letterSpacing": "-0.02em", "weight": 700 },
+      "h3": { "size": "32px", "lineHeight": "1.1", "letterSpacing": "-0.01em", "weight": 600 },
+      "bodyLarge": { "size": "20px", "lineHeight": "1.6", "weight": 500 },
+      "bodyBase": { "size": "16px", "lineHeight": "1.6", "weight": 400 },
+      "caption": { "size": "12px", "lineHeight": "1.4", "letterSpacing": "0.2em", "weight": 700, "case": "uppercase" }
+    }
+  },
+  "spacing": {
+    "xs": "4px",
+    "sm": "8px",
+    "md": "16px",
+    "lg": "24px",
+    "xl": "32px",
+    "xxl": "64px"
+  },
+  "borderRadius": {
+    "pill": "9999px",
+    "card": "2.5rem",
+    "button": "1rem"
+  },
+  "breakpoints": {
+    "mobileSmall": "320px",
+    "mobileLarge": "480px",
+    "tablet": "768px",
+    "desktopSmall": "1024px",
+    "desktopMedium": "1280px",
+    "desktopLarge": "1440px"
+  },
+  "buttons": {
+    "primary": { "bg": "#7C3AED", "text": "#FFFFFF", "hoverScale": 1.02 },
+    "secondary": { "bg": "transparent", "border": "rgba(255, 255, 255, 0.1)", "text": "#FFFFFF" },
+    "recording": { "bg": "#F59E0B", "text": "#0D0B1F", "animation": "pulse" }
+  },
+  "forms": {
+    "input": { "bg": "rgba(255, 255, 255, 0.03)", "border": "rgba(255, 255, 255, 0.1)", "focusBorder": "#7C3AED" }
+  },
+  "motion": {
+    "durations": { "fast": 0.15, "standard": 0.3, "slow": 0.6 },
+    "easings": { "glass": [0.23, 1, 0.32, 1] }
+  },
+  "glassLiquid": {
+    "blur": "16px",
+    "borderOpacity": 0.08,
+    "panelBg": "rgba(255, 255, 255, 0.03)"
+  },
+  "pwa": {
+    "name": "VoiceCV",
+    "short_name": "VoiceCV",
+    "theme_color": "#0D0B1F",
+    "background_color": "#0D0B1F",
+    "display": "standalone"
+  },
+  "screenInventory": ["Landing", "Recorder", "Processing", "Dashboard", "DocumentPreview", "Vault"],
+  "microcopy": {
+    "cta": "Speak Once. Land the Job.",
+    "recordingStart": "Capture your expertise...",
+    "processing": "Gemini is distilling your professional essence...",
+    "success": "Your professional brand is live."
+  }
+}

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">VoiceCV</title>
+  <rect width="512" height="512" rx="112" fill="#101522"/>
+  <path d="M142 278c0 63 51 114 114 114s114-51 114-114" fill="none" stroke="#6EA7FF" stroke-width="34" stroke-linecap="round"/>
+  <rect x="194" y="96" width="124" height="212" rx="62" fill="#F8FAFC"/>
+  <path d="M256 352v64" stroke="#F2A541" stroke-width="34" stroke-linecap="round"/>
+  <path d="M206 416h100" stroke="#F2A541" stroke-width="34" stroke-linecap="round"/>
+  <path d="M230 144v112M282 144v112" stroke="#101522" stroke-width="18" stroke-linecap="round" opacity=".25"/>
+</svg>

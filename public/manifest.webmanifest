@@ -1,0 +1,20 @@
+{
+  "name": "VoiceCV",
+  "short_name": "VoiceCV",
+  "description": "Turn a 60-second career voice note into a resume, cover letter, and LinkedIn bio.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#101522",
+  "theme_color": "#101522",
+  "orientation": "portrait-primary",
+  "categories": ["productivity", "business", "education"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

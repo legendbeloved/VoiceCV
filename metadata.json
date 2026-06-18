@@ -1,0 +1,8 @@
+{
+  "name": "VoiceCV",
+  "description": "Speak Once. Land the Job. Conversational AI that turns 60 seconds of voice into a professional resume, cover letter, and LinkedIn bio.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": []
+}
