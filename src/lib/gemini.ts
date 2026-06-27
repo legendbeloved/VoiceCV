@@ -4,6 +4,10 @@ const apiKey = process.env.GEMINI_API_KEY;
 const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 const MODEL_NAME = "gemini-3-flash-preview";
 
+if (!apiKey) {
+  console.warn('GEMINI_API_KEY is not set. Please add it to your .env file. Get a key at https://aistudio.google.com/apikey');
+}
+
 export type ToneStyle = 'professional' | 'warm' | 'executive' | 'confident' | 'creative';
 export type ResumeTemplate = 'ats' | 'modern' | 'executive' | 'creative';
 export type RewriteAction = 'stronger' | 'shorter' | 'more-human' | 'more-formal';
@@ -218,7 +222,7 @@ function parseJsonResponse(text: string): Partial<CareerAssets> {
 
 export async function processVoiceToDocuments(input: ProcessVoiceInput | string, targetRole?: string): Promise<CareerAssets> {
   if (!ai) {
-    throw new Error("Gemini API key not found");
+    throw new Error("Gemini API key is missing. Add GEMINI_API_KEY to your .env file and restart the dev server. Get a key at https://aistudio.google.com/apikey");
   }
 
   const normalizedInput: ProcessVoiceInput = typeof input === 'string'
@@ -273,7 +277,7 @@ export async function refineCareerDocument({
   tone?: ToneStyle;
 }): Promise<string> {
   if (!ai) {
-    throw new Error("Gemini API key not found");
+    throw new Error("Gemini API key is missing. Add GEMINI_API_KEY to your .env file and restart the dev server. Get a key at https://aistudio.google.com/apikey");
   }
 
   const actionInstructions: Record<RewriteAction, string> = {
@@ -313,7 +317,7 @@ export interface ATSAnalysis {
 }
 
 export async function analyzeATSMatch(resume: string, jobDescription: string): Promise<ATSAnalysis> {
-  if (!ai) throw new Error("Gemini API key not found");
+  if (!ai) throw new Error("Gemini API key is missing. Add GEMINI_API_KEY to your .env file and restart the dev server. Get a key at https://aistudio.google.com/apikey");
 
   const response = await ai.models.generateContent({
     model: MODEL_NAME,
@@ -357,7 +361,7 @@ export async function personalizeCoverLetter({
   companyName?: string;
   tone?: ToneStyle;
 }): Promise<string> {
-  if (!ai) throw new Error("Gemini API key not found");
+  if (!ai) throw new Error("Gemini API key is missing. Add GEMINI_API_KEY to your .env file and restart the dev server. Get a key at https://aistudio.google.com/apikey");
 
   const response = await ai.models.generateContent({
     model: MODEL_NAME,
@@ -395,7 +399,7 @@ export interface LinkedInProfile {
 }
 
 export async function parseLinkedInProfile(profileText: string): Promise<LinkedInProfile> {
-  if (!ai) throw new Error("Gemini API key not found");
+  if (!ai) throw new Error("Gemini API key is missing. Add GEMINI_API_KEY to your .env file and restart the dev server. Get a key at https://aistudio.google.com/apikey");
 
   const response = await ai.models.generateContent({
     model: MODEL_NAME,
@@ -441,7 +445,7 @@ export interface CareerPathSuggestion {
 }
 
 export async function suggestCareerPath(assets: CareerAssets): Promise<CareerPathSuggestion> {
-  if (!ai) throw new Error("Gemini API key not found");
+  if (!ai) throw new Error("Gemini API key is missing. Add GEMINI_API_KEY to your .env file and restart the dev server. Get a key at https://aistudio.google.com/apikey");
 
   const response = await ai.models.generateContent({
     model: MODEL_NAME,

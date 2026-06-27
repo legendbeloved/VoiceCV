@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'motion/react';
-import { Upload, FileText, Linkedin, ArrowRight, CheckCircle2, AlertCircle, Loader2, Briefcase, GraduationCap, Award } from 'lucide-react';
+import { Upload, FileText, Linkedin, ArrowRight, CheckCircle2, AlertCircle, Loader2, Briefcase, GraduationCap, Award, Info } from 'lucide-react';
 import { useVoiceCVStore } from '../store/useVoiceCVStore';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
@@ -13,6 +13,7 @@ export default function ImportPage({ onToast }: { onToast: (msg: string, v: 'suc
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(false);
   const [parsedProfile, setParsedProfile] = useState<LinkedInProfile | null>(null);
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleParse = async () => {
@@ -27,7 +28,7 @@ export default function ImportPage({ onToast }: { onToast: (msg: string, v: 'suc
       onToast('Profile parsed successfully.', 'success');
     } catch (error) {
       const msg = error instanceof Error && error.message.includes('API key')
-        ? 'Gemini API key is missing.'
+        ? 'Gemini API key is missing. Please check your .env file contains GEMINI_API_KEY.'
         : 'Failed to parse profile. Please try again.';
       onToast(msg, 'error');
     } finally {
@@ -81,16 +82,34 @@ export default function ImportPage({ onToast }: { onToast: (msg: string, v: 'suc
     onToast('Profile imported to VoiceCV. Go to Record to generate full documents.', 'success');
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    setUploadedFileName(file.name);
+    const extension = file.name.split('.').pop()?.toLowerCase();
+
+    if (extension === 'pdf') {
+      onToast('PDF files: Please open the PDF, select all text (Ctrl+A), copy (Ctrl+C), and paste it into the text area below.', 'info');
+      setImportMode('resume');
+      return;
+    }
+
+    if (extension === 'docx' || extension === 'doc') {
+      onToast('Word files: Please open the document, select all text (Ctrl+A), copy (Ctrl+C), and paste it into the text area below.', 'info');
+      setImportMode('resume');
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = (event) => {
       const text = event.target?.result as string;
       setInputText(text);
       setImportMode('resume');
-      onToast(`File "${file.name}" loaded. Click Parse to extract profile data.`, 'info');
+      onToast(`File "${file.name}" loaded successfully. Click Parse to extract profile data.`, 'success');
+    };
+    reader.onerror = () => {
+      onToast(`Failed to read file "${file.name}". Please try copying the text manually.`, 'error');
     };
     reader.readAsText(file);
   };
@@ -138,15 +157,33 @@ export default function ImportPage({ onToast }: { onToast: (msg: string, v: 'suc
                 <div className="space-y-4">
                   <div
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[var(--border)] bg-[var(--surface)] p-10 text-center cursor-pointer hover:border-[var(--accent)] hover:bg-[var(--accent-soft)] transition-all"
+                    className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[var(--border)] bg-[var(--surface)] p-8 sm:p-10 text-center cursor-pointer hover:border-[var(--accent)] hover:bg-[var(--accent-soft)] transition-all"
                   >
                     <Upload size={40} className="mb-4 text-[var(--muted)]" />
-                    <p className="text-sm font-bold text-[var(--text)]">Click to upload PDF or Word document</p>
-                    <p className="mt-1 text-xs text-[var(--muted)]">or drag and drop</p>
+                    <p className="text-sm font-bold text-[var(--text)]">Click to upload a text file (.txt)</p>
+                    <p className="mt-1 text-xs text-[var(--muted)]">For PDF/Word: Open the file, select all text, copy and paste below</p>
                   </div>
-                  <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx,.txt" onChange={handleFileUpload} className="hidden" />
+                  <input ref={fileInputRef} type="file" accept=".txt,.csv" onChange={handleFileUpload} className="hidden" />
+                  
+                  {uploadedFileName && (
+                    <div className="flex items-center gap-2 p-3 rounded-xl bg-[var(--accent-soft)] border border-[var(--accent)]/20">
+                      <Info size={16} className="text-[var(--accent)]" />
+                      <p className="text-xs text-[var(--accent)]">Loaded: {uploadedFileName}</p>
+                    </div>
+                  )}
+
+                  <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
+                    <p className="text-xs font-bold uppercase tracking-widest text-[var(--muted)] mb-2">How to import PDF/Word resumes:</p>
+                    <ol className="text-xs text-[var(--muted)] space-y-1 list-decimal list-inside">
+                      <li>Open your resume PDF or Word document</li>
+                      <li>Select all text (Ctrl+A / Cmd+A)</li>
+                      <li>Copy it (Ctrl+C / Cmd+C)</li>
+                      <li>Paste it in the text area below (Ctrl+V / Cmd+V)</li>
+                    </ol>
+                  </div>
+
                   <div>
-                    <label className="ml-2 text-xs font-bold uppercase tracking-widest text-[var(--muted)]">Or paste resume text directly</label>
+                    <label className="ml-2 text-xs font-bold uppercase tracking-widest text-[var(--muted)]">Paste resume text here</label>
                     <textarea
                       value={inputText}
                       onChange={(e) => setInputText(e.target.value)}
