@@ -303,3 +303,178 @@ Return ONLY the revised markdown content. Do not wrap it in JSON or code fences.
 
   return (response.text || content).trim();
 }
+
+export interface ATSAnalysis {
+  matchScore: number;
+  matchedKeywords: string[];
+  missingKeywords: string[];
+  suggestedRewrites: Array<{ bullet: string; suggestion: string }>;
+  overallNotes: string[];
+}
+
+export async function analyzeATSMatch(resume: string, jobDescription: string): Promise<ATSAnalysis> {
+  if (!ai) throw new Error("Gemini API key not found");
+
+  const response = await ai.models.generateContent({
+    model: MODEL_NAME,
+    contents: `You are an ATS (Applicant Tracking System) expert. Analyze the resume against the job description and return a JSON analysis.
+
+RESUME:
+${resume}
+
+JOB DESCRIPTION:
+${jobDescription}
+
+Return ONLY valid JSON with this structure:
+{
+  "matchScore": number (0-100),
+  "matchedKeywords": ["keyword1", "keyword2"],
+  "missingKeywords": ["keyword1", "keyword2"],
+  "suggestedRewrites": [{ "bullet": "original text", "suggestion": "improved version with keyword" }],
+  "overallNotes": ["note1", "note2"]
+}`,
+    config: { responseMimeType: "application/json" },
+  });
+
+  const parsed = parseJsonResponse(response.text || '{}') as any;
+  return {
+    matchScore: clampScore(parsed.matchScore, 50),
+    matchedKeywords: parsed.matchedKeywords || [],
+    missingKeywords: parsed.missingKeywords || [],
+    suggestedRewrites: parsed.suggestedRewrites || [],
+    overallNotes: parsed.overallNotes || [],
+  };
+}
+
+export async function personalizeCoverLetter({
+  resume,
+  jobDescription,
+  companyName,
+  tone = 'professional',
+}: {
+  resume: string;
+  jobDescription: string;
+  companyName?: string;
+  tone?: ToneStyle;
+}): Promise<string> {
+  if (!ai) throw new Error("Gemini API key not found");
+
+  const response = await ai.models.generateContent({
+    model: MODEL_NAME,
+    contents: `You are an expert cover letter writer. Write a personalized cover letter based on the resume and job description.
+
+RESUME:
+${resume}
+
+JOB DESCRIPTION:
+${jobDescription}
+
+${companyName ? `COMPANY: ${companyName}` : ''}
+
+TONE: ${toneLabels[tone]}
+
+Rules:
+- Research the company context from the job description
+- Mention specific details about the company's mission, products, or culture
+- Tailor each paragraph to the specific role requirements
+- Include a compelling opening and strong closing
+- Keep it under 400 words
+- Return ONLY the cover letter text in markdown format`,
+  });
+
+  return (response.text || '').trim();
+}
+
+export interface LinkedInProfile {
+  name: string;
+  headline: string;
+  summary: string;
+  experience: Array<{ title: string; company: string; duration: string; description: string }>;
+  education: Array<{ school: string; degree: string; field: string; year: string }>;
+  skills: string[];
+}
+
+export async function parseLinkedInProfile(profileText: string): Promise<LinkedInProfile> {
+  if (!ai) throw new Error("Gemini API key not found");
+
+  const response = await ai.models.generateContent({
+    model: MODEL_NAME,
+    contents: `You are a career data parser. Extract structured information from this LinkedIn profile text or resume.
+
+INPUT:
+${profileText}
+
+Return ONLY valid JSON with this structure:
+{
+  "name": "Full Name",
+  "headline": "Professional Headline",
+  "summary": "Professional summary",
+  "experience": [{ "title": "Job Title", "company": "Company Name", "duration": "Duration", "description": "Key achievements" }],
+  "education": [{ "school": "School Name", "degree": "Degree", "field": "Field of Study", "year": "Graduation Year" }],
+  "skills": ["Skill 1", "Skill 2"]
+}`,
+    config: { responseMimeType: "application/json" },
+  });
+
+  const parsed = parseJsonResponse(response.text || '{}') as any;
+  return {
+    name: parsed.name || 'Candidate',
+    headline: parsed.headline || '',
+    summary: parsed.summary || '',
+    experience: parsed.experience || [],
+    education: parsed.education || [],
+    skills: parsed.skills || [],
+  };
+}
+
+export interface CareerPathSuggestion {
+  currentRole: string;
+  suggestedRoles: Array<{
+    title: string;
+    matchScore: number;
+    skillsRequired: string[];
+    skillsGap: string[];
+    recommendedCourses: Array<{ name: string; provider: string; url?: string }>;
+    timeline: string;
+  }>;
+  overallAdvice: string;
+}
+
+export async function suggestCareerPath(assets: CareerAssets): Promise<CareerPathSuggestion> {
+  if (!ai) throw new Error("Gemini API key not found");
+
+  const response = await ai.models.generateContent({
+    model: MODEL_NAME,
+    contents: `You are a career strategist. Based on the candidate's profile, suggest career progression paths.
+
+CANDIDATE PROFILE:
+Name: ${assets.name}
+Current Role: ${assets.role}
+Skills: ${assets.extracted.skills.join(', ')}
+Experience: ${assets.extracted.experience.join('; ')}
+Education: ${assets.extracted.education.join('; ')}
+Strengths: ${assets.strengths.join(', ')}
+
+Return ONLY valid JSON with this structure:
+{
+  "currentRole": "${assets.role}",
+  "suggestedRoles": [{
+    "title": "Suggested Role Title",
+    "matchScore": number (0-100),
+    "skillsRequired": ["skill1", "skill2"],
+    "skillsGap": ["gap1", "gap2"],
+    "recommendedCourses": [{ "name": "Course Name", "provider": "Platform", "url": "optional url" }],
+    "timeline": "6-12 months"
+  }],
+  "overallAdvice": "Strategic career advice for this candidate"
+}`,
+    config: { responseMimeType: "application/json" },
+  });
+
+  const parsed = parseJsonResponse(response.text || '{}') as any;
+  return {
+    currentRole: parsed.currentRole || assets.role,
+    suggestedRoles: parsed.suggestedRoles || [],
+    overallAdvice: parsed.overallAdvice || '',
+  };
+}

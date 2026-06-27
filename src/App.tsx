@@ -12,6 +12,17 @@ import { NotFoundPage } from './pages/NotFoundPage';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { useVoiceCVStore, ProcessingStep } from './store/useVoiceCVStore';
 import { processVoiceToDocuments, ResumeTemplate, ToneStyle } from './lib/gemini';
+import { OnboardingTour } from './components/ui/OnboardingTour';
+import ATSOptimizerPage from './pages/ATSOptimizerPage';
+import CoverLetterPage from './pages/CoverLetterPage';
+import ImportPage from './pages/ImportPage';
+import CareerPathPage from './pages/CareerPathPage';
+import ProfilesPage from './pages/ProfilesPage';
+import ThemesPage from './pages/ThemesPage';
+import PortfolioPage from './pages/PortfolioPage';
+import VaultPage from './pages/VaultPage';
+import SettingsPage from './pages/SettingsPage';
+import { InterviewSimulatorPage } from './pages/InterviewSimulatorPage';
 
 export type ThemeMode = 'light' | 'dark';
 
@@ -108,6 +119,8 @@ export default function App() {
     <div className={`app-shell theme-${theme} flex flex-col min-h-screen selection:bg-brand-violet/30`}>
       <a href="#main-content" className="skip-link">Skip to main content</a>
       
+      <OnboardingTour />
+
       <Navbar
         onLogoClick={handleReset}
         theme={theme}
@@ -122,6 +135,17 @@ export default function App() {
               <Route path="/record" element={<RecordPage onSubmit={handleSubmitTranscription} />} />
               <Route path="/processing" element={<ProcessingPage />} />
               <Route path="/results" element={<ResultsPage onReset={handleReset} onToast={addToast} />} />
+              <Route path="/profiles" element={<ProfilesPage onToast={addToast} />} />
+              <Route path="/ats-optimizer" element={<ATSOptimizerPage onToast={addToast} />} />
+              <Route path="/cover-letter" element={<CoverLetterPage onToast={addToast} />} />
+              <Route path="/import" element={<ImportPage onToast={addToast} />} />
+              <Route path="/career-path" element={<CareerPathPage onToast={addToast} />} />
+              <Route path="/themes" element={<ThemesPage />} />
+              <Route path="/portfolio" element={<PortfolioPage />} />
+              <Route path="/portfolio/:id" element={<PortfolioPage />} />
+              <Route path="/vault" element={<VaultPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/interview" element={<InterviewSimulatorPage onToast={addToast} />} />
               <Route path="*" element={<NotFoundPage onBack={handleReset} />} />
             </Routes>
           </ErrorBoundary>

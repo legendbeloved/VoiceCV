@@ -1,8 +1,9 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { ArrowRight, ClipboardCheck, FileText, Linkedin, Mic2, Sparkles, Timer, Wand2 } from 'lucide-react';
+import { ArrowRight, ClipboardCheck, FileText, Linkedin, Mic2, Sparkles, Timer, Wand2, Target, Mail, Upload, Route, Users, Palette, Database } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
+import { Link } from 'react-router-dom';
 
 interface LandingPageProps {
   onStart: () => void;
@@ -48,6 +49,11 @@ export function LandingPage({ onStart }: LandingPageProps) {
               <Button size="lg" onClick={onStart} rightIcon={<ArrowRight size={20} />}>
                 Record Your Story
               </Button>
+              <Link to="/import">
+                <Button size="lg" variant="secondary" leftIcon={<Upload size={18} />}>
+                  Import Profile
+                </Button>
+              </Link>
             </div>
           </motion.div>
 
@@ -64,7 +70,7 @@ export function LandingPage({ onStart }: LandingPageProps) {
                   <h2 className="mt-1 text-xl sm:text-2xl font-display font-bold text-[var(--text)]">Career signal capture</h2>
                 </div>
                 <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-2xl bg-[var(--accent)] text-[var(--on-accent)] flex items-center justify-center">
-                  <Mic2 size={20} sm:size={24} />
+                  <Mic2 size={24} />
                 </div>
               </div>
 
@@ -102,7 +108,7 @@ export function LandingPage({ onStart }: LandingPageProps) {
         <div className="grid gap-4 sm:gap-5 lg:gap-6 md:grid-cols-2 lg:grid-cols-3">
           {flowSteps.map((step) => (
             <Card key={step.title} padding="lg" hover>
-              <step.icon size={24} sm:size={28} className="text-[var(--accent)]" />
+              <step.icon size={28} className="text-[var(--accent)]" />
               <h3 className="mt-4 text-xl sm:text-2xl font-display font-bold text-[var(--text)]">{step.title}</h3>
               <p className="mt-2 text-sm leading-6 lg:leading-7 text-[var(--muted)]">{step.copy}</p>
             </Card>
@@ -122,12 +128,40 @@ export function LandingPage({ onStart }: LandingPageProps) {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {outputs.map((output) => (
               <Card key={output.title} variant="solid" padding="lg">
-                <output.icon size={24} sm:size={26} className="text-[var(--accent)]" />
+                <output.icon size={26} className="text-[var(--accent)]" />
                 <h3 className="mt-4 text-lg sm:text-xl font-display font-bold text-[var(--text)]">{output.title}</h3>
                 <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{output.copy}</p>
               </Card>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section id="features" className="pb-16 sm:pb-20 lg:pb-24">
+        <div className="mb-8 lg:mb-10 max-w-2xl">
+          <p className="text-xs font-black uppercase tracking-[0.28em] text-[var(--accent)]">All Features</p>
+          <h2 className="mt-2 text-3xl sm:text-4xl lg:text-5xl font-display font-extrabold text-[var(--text)]">Everything you need to land your next role.</h2>
+          <p className="mt-4 text-[var(--muted)]">From voice recording to career path planning. Explore all the tools VoiceCV offers.</p>
+        </div>
+        <div className="grid gap-4 sm:gap-5 lg:gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {[
+            { icon: Target, title: 'ATS Optimizer', copy: 'Compare your resume against job descriptions. Get keyword match scores and rewrite suggestions.', href: '/ats-optimizer' },
+            { icon: Mail, title: 'Cover Letter AI', copy: 'Generate company-specific cover letters that mention the company mission and culture.', href: '/cover-letter' },
+            { icon: Upload, title: 'Import Profile', copy: 'Bootstrap from LinkedIn, resume text, or PDF/Word files. AI parses everything automatically.', href: '/import' },
+            { icon: Route, title: 'Career Path', copy: 'AI suggests career progression, skill gaps, and courses based on your experience.', href: '/career-path' },
+            { icon: Users, title: 'Multi-Profile', copy: 'Save multiple profiles for different roles. Switch between them with different preferences.', href: '/profiles' },
+            { icon: Database, title: 'Local Vault', copy: 'All your generated documents stored locally. Search, filter, and access anytime.', href: '/vault' },
+            { icon: Palette, title: 'Themes', copy: 'Customize your documents with professional templates, color schemes, and layouts.', href: '/themes' },
+            { icon: Users, title: 'Interview Prep', copy: 'Practice with an AI Hiring Manager that asks realistic questions based on your resume.', href: '/interview' },
+          ].map((feature) => (
+            <Link key={feature.title} to={feature.href}>
+              <Card padding="lg" hover className="h-full">
+                <feature.icon size={28} className="text-[var(--accent)]" />
+                <h3 className="mt-4 text-lg sm:text-xl font-display font-bold text-[var(--text)]">{feature.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{feature.copy}</p>
+              </Card>
+            </Link>
+          ))}
         </div>
       </section>
     </div>

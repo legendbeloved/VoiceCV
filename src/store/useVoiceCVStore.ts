@@ -5,6 +5,16 @@ export type ProcessingStep = 'idle' | 'transcribing' | 'understanding' | 'resume
 export type AudioState = 'idle' | 'recording' | 'paused' | 'complete';
 export type PageType = 'landing' | 'record' | 'processing' | 'results' | '404';
 
+export interface UserProfile {
+  id: string;
+  name: string;
+  role: string;
+  tone: ToneStyle;
+  resumeTemplate: ResumeTemplate;
+  assets: CareerAssets | null;
+  createdAt: string;
+}
+
 interface VoiceCVState {
   jobRole: string;
   jobDescription: string;
@@ -19,7 +29,11 @@ interface VoiceCVState {
   error: string | null;
   audioState: AudioState;
   hasSeenOnboarding: boolean;
-  
+  onboardingStep: number;
+
+  profiles: UserProfile[];
+  activeProfileId: string | null;
+
   setJobRole: (role: string) => void;
   setJobDescription: (description: string) => void;
   setTone: (tone: ToneStyle) => void;
@@ -33,11 +47,22 @@ interface VoiceCVState {
   setError: (error: string | null) => void;
   setAudioState: (state: AudioState) => void;
   setHasSeenOnboarding: (seen: boolean) => void;
+  setOnboardingStep: (step: number) => void;
   updateAssetField: (field: keyof CareerAssets, value: any) => void;
   reset: () => void;
+
+  createProfile: (name: string, role: string) => string;
+  switchProfile: (id: string) => void;
+  deleteProfile: (id: string) => void;
+  updateProfile: (id: string, updates: Partial<UserProfile>) => void;
+  getActiveProfile: () => UserProfile | null;
 }
 
-export const useVoiceCVStore = create<VoiceCVState>((set) => ({
+function generateId(): string {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+}
+
+export const useVoiceCVStore = create<VoiceCVState>((set, get) => ({
   jobRole: '',
   jobDescription: '',
   tone: 'professional',
@@ -51,6 +76,10 @@ export const useVoiceCVStore = create<VoiceCVState>((set) => ({
   error: null,
   audioState: 'idle',
   hasSeenOnboarding: false,
+  onboardingStep: 0,
+
+  profiles: [],
+  activeProfileId: null,
 
   setJobRole: (jobRole) => set({ jobRole }),
   setJobDescription: (jobDescription) => set({ jobDescription }),
@@ -65,11 +94,12 @@ export const useVoiceCVStore = create<VoiceCVState>((set) => ({
   setError: (error) => set({ error }),
   setAudioState: (audioState) => set({ audioState }),
   setHasSeenOnboarding: (hasSeenOnboarding) => set({ hasSeenOnboarding }),
-  
+  setOnboardingStep: (onboardingStep) => set({ onboardingStep }),
+
   updateAssetField: (field, value) => set((state) => ({
     assets: state.assets ? { ...state.assets, [field]: value } : null
   })),
-  
+
   reset: () => set({
     jobRole: '',
     jobDescription: '',
@@ -84,4 +114,51 @@ export const useVoiceCVStore = create<VoiceCVState>((set) => ({
     error: null,
     audioState: 'idle',
   }),
+
+  createProfile: (name, role) => {
+    const id = generateId();
+    const state = get();
+    const newProfile: UserProfile = {
+      id,
+      name,
+      role,
+      tone: state.tone,
+      resumeTemplate: state.resumeTemplate,
+      assets: state.assets,
+      createdAt: new Date().toISOString(),
+    };
+    set((s) => ({
+      profiles: [...s.profiles, newProfile],
+      activeProfileId: id,
+    }));
+    return id;
+  },
+
+  switchProfile: (id) => {
+    const state = get();
+    const profile = state.profiles.find((p) => p.id === id);
+    if (profile) {
+      set({
+        activeProfileId: id,
+        tone: profile.tone,
+        resumeTemplate: profile.resumeTemplate,
+        assets: profile.assets,
+        jobRole: profile.role,
+      });
+    }
+  },
+
+  deleteProfile: (id) => set((state) => ({
+    profiles: state.profiles.filter((p) => p.id !== id),
+    activeProfileId: state.activeProfileId === id ? null : state.activeProfileId,
+  })),
+
+  updateProfile: (id, updates) => set((state) => ({
+    profiles: state.profiles.map((p) => p.id === id ? { ...p, ...updates } : p),
+  })),
+
+  getActiveProfile: () => {
+    const state = get();
+    return state.profiles.find((p) => p.id === state.activeProfileId) || null;
+  },
 }));
