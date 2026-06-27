@@ -124,12 +124,12 @@ export default function CoverLetterPage({ onToast }: { onToast: (msg: string, v:
                   </div>
                 </div>
               </div>
-              <div className="h-[600px] overflow-y-auto p-6 sm:p-10 custom-scrollbar">
+              <div className="h-[400px] sm:h-[500px] lg:h-[600px] overflow-y-auto p-4 sm:p-6 lg:p-10 custom-scrollbar">
                 {isEditing ? (
                   <textarea
                     value={editableContent}
                     onChange={(e) => setEditableContent(e.target.value)}
-                    className="h-full min-h-[540px] w-full resize-none rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 font-mono text-sm leading-7 text-[var(--text)] outline-none focus:border-[var(--accent)]"
+                    className="h-full min-h-[300px] sm:min-h-[400px] lg:min-h-[540px] w-full resize-none rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5 font-mono text-sm leading-7 text-[var(--text)] outline-none focus:border-[var(--accent)]"
                     autoFocus
                   />
                 ) : (

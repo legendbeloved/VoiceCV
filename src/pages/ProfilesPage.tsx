@@ -126,7 +126,7 @@ export default function ProfilesPage({ onToast }: { onToast: (msg: string, v: 's
           <Users size={48} className="mx-auto mb-4 text-[var(--muted)] opacity-40" />
           <p className="text-lg font-bold text-[var(--text)] mb-2">No profiles yet</p>
           <p className="text-sm text-[var(--muted)] mb-6">Create your first profile or save your current session as a profile.</p>
-          <div className="flex justify-center gap-3">
+          <div className="flex flex-col sm:flex-row justify-center gap-3">
             <Button onClick={() => setShowCreate(true)} leftIcon={<Plus size={16} />}>Create Profile</Button>
             {assets && <Button variant="secondary" onClick={handleSaveFromCurrent} leftIcon={<Save size={16} />}>Save Current</Button>}
           </div>

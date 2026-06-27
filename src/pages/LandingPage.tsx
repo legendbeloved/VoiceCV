@@ -74,7 +74,7 @@ export function LandingPage({ onStart }: LandingPageProps) {
                 </div>
               </div>
 
-              <div className="py-8 lg:py-10">
+              <div className="py-8 lg:py-10 overflow-hidden">
                 <div className="flex h-24 lg:h-28 items-center justify-center gap-1">
                   {Array.from({ length: 34 }).map((_, index) => (
                     <motion.span

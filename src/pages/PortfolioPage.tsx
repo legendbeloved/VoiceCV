@@ -227,10 +227,10 @@ export default function PortfolioPage() {
         </motion.div>
 
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }} className="lg:col-span-8">
-          <div className="mb-8 flex gap-2 p-1 bg-[var(--surface)] border border-[var(--border)] rounded-2xl w-fit">
+          <div className="mb-8 flex gap-2 p-1 bg-[var(--surface)] border border-[var(--border)] rounded-2xl w-fit overflow-x-auto">
             {(['resume', 'coverLetter', 'linkedin'] as const).map((tab) => (
               <button key={tab} onClick={() => setActiveTab(tab)}
-                className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                className={`px-4 sm:px-6 py-3 min-h-[44px] rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap ${
                   activeTab === tab ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-lg' : 'text-[var(--muted)] hover:text-[var(--text)]'
                 }`}>
                 {tab.replace(/([A-Z])/, ' $1')}
@@ -248,7 +248,7 @@ export default function PortfolioPage() {
               </h4>
             </div>
             
-            <div className="h-[600px] overflow-y-auto p-6 sm:p-10 custom-scrollbar">
+            <div className="h-[400px] sm:h-[500px] lg:h-[600px] overflow-y-auto p-4 sm:p-6 lg:p-10 custom-scrollbar">
               <article className="markdown-body max-w-none text-[var(--text)]">
                 <Markdown>{activeTab === 'resume' ? resume : activeTab === 'coverLetter' ? coverLetter : linkedinBio}</Markdown>
               </article>

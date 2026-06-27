@@ -90,7 +90,7 @@ export default function SettingsPage() {
                       <h4 className="text-sm font-bold uppercase tracking-widest text-white/40">Default Tone of Voice</h4>
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                         {['Confident', 'Humble', 'Tech-Native', 'Executive'].map(tone => (
-                          <button key={tone} className="p-3 rounded-xl bg-white/5 border border-white/5 text-xs font-bold hover:border-brand-violet/30 hover:bg-brand-violet/5 transition-all">
+                          <button key={tone} className="p-3 min-h-[44px] rounded-xl bg-white/5 border border-white/5 text-xs font-bold hover:border-brand-violet/30 hover:bg-brand-violet/5 transition-all">
                             {tone}
                           </button>
                         ))}
@@ -108,7 +108,7 @@ export default function SettingsPage() {
                     <p className="text-sm text-white/50">Gemini will prioritize keywords and skills relevant to these areas.</p>
                     <div className="flex flex-wrap gap-2">
                       {['SaaS', 'Fintech', 'AI/ML', 'Web3', 'HealthTech', 'E-commerce'].map(tag => (
-                        <button key={tag} className="px-4 py-2 rounded-full border border-white/10 text-[10px] font-black uppercase tracking-widest hover:border-brand-violet transition-colors">
+                        <button key={tag} className="px-4 py-2.5 min-h-[44px] rounded-full border border-white/10 text-[10px] font-black uppercase tracking-widest hover:border-brand-violet transition-colors">
                           {tag}
                         </button>
                       ))}

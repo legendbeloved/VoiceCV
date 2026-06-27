@@ -300,7 +300,7 @@ export function RecordPage({ onSubmit }: RecordPageProps) {
               </div>
 
               <div className="flex flex-col items-center gap-6">
-                <div className="text-5xl font-display font-extrabold text-[var(--text)]" aria-live="polite">
+                <div className="text-4xl sm:text-5xl font-display font-extrabold text-[var(--text)]" aria-live="polite">
                   {formattedTime}
                 </div>
 

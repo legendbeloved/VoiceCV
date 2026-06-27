@@ -233,7 +233,7 @@ export function ResultsPage({ onReset, onToast }: { onReset: () => void, onToast
           ))}
         </nav>
 
-        <Card padding="none" className="min-h-[720px] overflow-hidden">
+        <Card padding="none" className="min-h-[400px] sm:min-h-[500px] lg:min-h-[720px] overflow-hidden">
           <div className="space-y-4 border-b border-[var(--border)] bg-[var(--surface)] p-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
@@ -282,12 +282,12 @@ export function ResultsPage({ onReset, onToast }: { onReset: () => void, onToast
             )}
           </div>
 
-          <div className="h-[640px] overflow-y-auto p-6 sm:p-10 custom-scrollbar">
+          <div className="h-[400px] sm:h-[500px] lg:h-[640px] overflow-y-auto p-4 sm:p-6 lg:p-10 custom-scrollbar">
             {isEditing ? (
               <textarea
                 value={editableContent}
                 onChange={(event) => setEditableContent(event.target.value)}
-                className="h-full min-h-[540px] w-full resize-none rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 font-mono text-sm leading-7 text-[var(--text)] outline-none focus:border-[var(--accent)]"
+                className="h-full min-h-[300px] sm:min-h-[400px] lg:min-h-[540px] w-full resize-none rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5 font-mono text-sm leading-7 text-[var(--text)] outline-none focus:border-[var(--accent)]"
                 autoFocus
               />
             ) : (

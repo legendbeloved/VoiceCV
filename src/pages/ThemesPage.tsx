@@ -45,8 +45,8 @@ export default function ThemesPage() {
   const currentThemeId = 'voyager'; // Fallback to current
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-20">
-      <header className="text-center mb-20 space-y-4">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16 lg:py-20">
+      <header className="text-center mb-12 sm:mb-16 lg:mb-20 space-y-4">
         <motion.div
            initial={{ opacity: 0, scale: 0.5 }}
            animate={{ opacity: 1, scale: 1 }}
@@ -54,11 +54,11 @@ export default function ThemesPage() {
         >
           <Palette size={32} />
         </motion.div>
-        <h1 className="text-5xl md:text-6xl font-display font-black tracking-tight uppercase">Visual Identity</h1>
+        <h1 className="text-3xl sm:text-5xl md:text-6xl font-display font-black tracking-tight uppercase">Visual Identity</h1>
         <p className="text-white/40 text-sm font-bold tracking-[0.4em] uppercase">Resume Themes Gallery</p>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12">
         {THEMES.map((theme, idx) => (
           <motion.div
             key={theme.id}
@@ -90,7 +90,7 @@ export default function ThemesPage() {
                 </div>
 
                 {/* Info Section */}
-                <div className="md:col-span-3 p-8 flex flex-col justify-between bg-void-indigo/40 lg:backdrop-blur-none">
+                <div className="md:col-span-3 p-5 sm:p-6 lg:p-8 flex flex-col justify-between bg-void-indigo/40 lg:backdrop-blur-none">
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-2xl font-display font-black group-hover:text-brand-violet transition-colors">{theme.name}</h3>
@@ -140,14 +140,14 @@ export default function ThemesPage() {
       <motion.div 
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
-        className="mt-32 p-12 rounded-[2.5rem] bg-gradient-to-br from-brand-violet/10 to-transparent border border-white/5 text-center"
+        className="mt-16 sm:mt-24 lg:mt-32 p-6 sm:p-8 lg:p-12 rounded-[2rem] sm:rounded-[2.5rem] bg-gradient-to-br from-brand-violet/10 to-transparent border border-white/5 text-center"
       >
         <Layers size={40} className="text-brand-violet mx-auto mb-6" />
-        <h2 className="text-3xl font-display font-bold mb-4">Can't find the perfect style?</h2>
-        <p className="text-white/40 max-w-xl mx-auto mb-8">
+        <h2 className="text-2xl sm:text-3xl font-display font-bold mb-4">Can't find the perfect style?</h2>
+        <p className="text-white/40 max-w-xl mx-auto mb-8 text-sm sm:text-base">
           Our AI engine is constantly learning new professional aesthetics. Request a custom theme and Gemini will generate a unique visual language just for your profile.
         </p>
-        <Button variant="secondary" className="px-12 h-14 rounded-2xl">
+        <Button variant="secondary" className="px-8 sm:px-12 h-12 sm:h-14 rounded-2xl">
            Request Custom Theme
         </Button>
       </motion.div>

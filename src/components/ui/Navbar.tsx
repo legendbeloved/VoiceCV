@@ -124,9 +124,9 @@ export function Navbar({ onLogoClick, theme, onThemeToggle }: NavbarProps) {
                 {mobileLinks.map((item) => {
                   const Icon = item.icon;
                   const content = (
-                    <span className={`flex items-center gap-3 rounded-2xl border px-4 py-3 transition-all ${item.active ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--text)]' : 'border-transparent text-[var(--muted)] hover:border-[var(--border)] hover:bg-[var(--surface)] hover:text-[var(--text)]'}`}>
-                      <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${item.active ? 'bg-[var(--accent)] text-[var(--on-accent)]' : 'bg-[var(--surface)] text-[var(--accent)]'}`}>
-                        <Icon size={16} />
+                    <span className={`flex items-center gap-3 rounded-2xl border px-4 py-3.5 transition-all ${item.active ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--text)]' : 'border-transparent text-[var(--muted)] hover:border-[var(--border)] hover:bg-[var(--surface)] hover:text-[var(--text)]'}`}>
+                      <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${item.active ? 'bg-[var(--accent)] text-[var(--on-accent)]' : 'bg-[var(--surface)] text-[var(--accent)]'}`}>
+                        <Icon size={18} />
                       </span>
                       <span className="font-display text-sm font-bold uppercase tracking-[0.08em]">{item.label}</span>
                     </span>
