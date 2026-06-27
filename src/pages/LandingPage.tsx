@@ -23,28 +23,28 @@ const outputs = [
 export function LandingPage({ onStart }: LandingPageProps) {
   return (
     <div className="w-full">
-      <section className="relative min-h-[calc(100vh-7rem)] flex flex-col justify-center overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[var(--hero)] px-5 py-16 sm:px-10 lg:px-16">
+      <section className="relative min-h-[calc(100vh-5rem)] flex flex-col justify-center overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[var(--hero)] px-4 py-12 sm:px-6 lg:px-10 xl:px-14">
         <div className="absolute inset-0 pointer-events-none opacity-70 bg-[radial-gradient(circle_at_15%_20%,var(--accent-soft),transparent_34%),radial-gradient(circle_at_88%_22%,var(--warm-soft),transparent_30%),linear-gradient(135deg,transparent,rgba(255,255,255,0.04))]" />
-        <div className="relative grid lg:grid-cols-[1fr_0.82fr] gap-12 items-center">
+        <div className="relative grid lg:grid-cols-[1fr_0.82fr] gap-8 lg:gap-12 items-center">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55 }}
-            className="max-w-3xl"
+            className="max-w-3xl mx-auto lg:mx-0"
           >
             <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--panel)] px-4 py-2 text-xs font-bold uppercase tracking-[0.22em] text-[var(--muted)]">
               <Timer size={14} className="text-[var(--accent)]" />
               60-second career documents
             </div>
 
-            <h1 className="mt-7 font-display text-5xl font-extrabold leading-[0.95] text-[var(--text)] sm:text-6xl lg:text-7xl">
+            <h1 className="mt-6 font-display font-extrabold leading-[0.95] text-[var(--text)] text-4xl sm:text-5xl lg:text-6xl xl:text-7xl">
               Speak once. Land the job.
             </h1>
-            <p className="mt-7 max-w-2xl text-lg leading-8 text-[var(--muted)]">
+            <p className="mt-6 max-w-2xl text-base sm:text-lg leading-7 lg:leading-8 text-[var(--muted)]">
               VoiceCV records your pitch, asks Gemini to transcribe and extract the useful career details, then generates a resume, cover letter, and LinkedIn bio without making you stare at a blank page.
             </p>
 
-            <div className="mt-9 flex flex-col gap-4 sm:flex-row">
+            <div className="mt-8 flex flex-col sm:flex-row gap-4">
               <Button size="lg" onClick={onStart} rightIcon={<ArrowRight size={20} />}>
                 Record Your Story
               </Button>
@@ -55,21 +55,21 @@ export function LandingPage({ onStart }: LandingPageProps) {
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.65, delay: 0.15 }}
-            className="relative"
+            className="relative mx-auto max-w-lg lg:max-w-none"
           >
             <Card padding="lg" className="relative overflow-hidden">
-              <div className="flex items-center justify-between border-b border-[var(--border)] pb-6">
+              <div className="flex items-center justify-between border-b border-[var(--border)] pb-4 lg:pb-6">
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.24em] text-[var(--muted)]">Live session</p>
-                  <h2 className="mt-2 text-2xl font-display font-bold text-[var(--text)]">Career signal capture</h2>
+                  <h2 className="mt-1 text-xl sm:text-2xl font-display font-bold text-[var(--text)]">Career signal capture</h2>
                 </div>
-                <div className="h-12 w-12 rounded-2xl bg-[var(--accent)] text-[var(--on-accent)] flex items-center justify-center">
-                  <Mic2 size={24} />
+                <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-2xl bg-[var(--accent)] text-[var(--on-accent)] flex items-center justify-center">
+                  <Mic2 size={20} sm:size={24} />
                 </div>
               </div>
 
-              <div className="py-10">
-                <div className="flex h-28 items-center justify-center gap-1">
+              <div className="py-8 lg:py-10">
+                <div className="flex h-24 lg:h-28 items-center justify-center gap-1">
                   {Array.from({ length: 34 }).map((_, index) => (
                     <motion.span
                       key={index}
@@ -83,9 +83,9 @@ export function LandingPage({ onStart }: LandingPageProps) {
 
               <div className="grid grid-cols-3 gap-3">
                 {['Transcript', 'Resume', 'LinkedIn'].map((item) => (
-                  <div key={item} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 text-center">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--muted)]">{item}</p>
-                    <p className="mt-2 text-sm font-bold text-[var(--text)]">Ready</p>
+                  <div key={item} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-3 sm:p-4 text-center">
+                    <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-[var(--muted)]">{item}</p>
+                    <p className="mt-1 text-xs sm:text-sm font-bold text-[var(--text)]">Ready</p>
                   </div>
                 ))}
               </div>
@@ -94,37 +94,37 @@ export function LandingPage({ onStart }: LandingPageProps) {
         </div>
       </section>
 
-      <section id="how-it-works" className="py-24">
-        <div className="mb-10 max-w-2xl">
+      <section id="how-it-works" className="py-16 sm:py-20 lg:py-24">
+        <div className="mb-8 lg:mb-10 max-w-2xl">
           <p className="text-xs font-black uppercase tracking-[0.28em] text-[var(--accent)]">Simple flow</p>
-          <h2 className="mt-3 text-4xl font-display font-extrabold text-[var(--text)]">Built for people who know what to say, not how to format it.</h2>
+          <h2 className="mt-2 text-3xl sm:text-4xl lg:text-5xl font-display font-extrabold text-[var(--text)]">Built for people who know what to say, not how to format it.</h2>
         </div>
-        <div className="grid gap-5 md:grid-cols-3">
+        <div className="grid gap-4 sm:gap-5 lg:gap-6 md:grid-cols-2 lg:grid-cols-3">
           {flowSteps.map((step) => (
             <Card key={step.title} padding="lg" hover>
-              <step.icon size={28} className="text-[var(--accent)]" />
-              <h3 className="mt-6 text-2xl font-display font-bold text-[var(--text)]">{step.title}</h3>
-              <p className="mt-3 leading-7 text-[var(--muted)]">{step.copy}</p>
+              <step.icon size={24} sm:size={28} className="text-[var(--accent)]" />
+              <h3 className="mt-4 text-xl sm:text-2xl font-display font-bold text-[var(--text)]">{step.title}</h3>
+              <p className="mt-2 text-sm leading-6 lg:leading-7 text-[var(--muted)]">{step.copy}</p>
             </Card>
           ))}
         </div>
       </section>
 
-      <section id="outputs" className="pb-24">
-        <div className="grid gap-6 lg:grid-cols-[0.8fr_1fr] lg:items-start">
+      <section id="outputs" className="pb-16 sm:pb-20 lg:pb-24">
+        <div className="grid gap-6 lg:gap-8 lg:grid-cols-[0.8fr_1fr] lg:items-start">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.28em] text-[var(--accent)]">MVP outputs</p>
-            <h2 className="mt-3 text-4xl font-display font-extrabold text-[var(--text)]">Three documents. No login. No clutter.</h2>
-            <p className="mt-5 leading-8 text-[var(--muted)]">
-              The app stays focused on the hackathon slice: record audio, generate career copy, then let the user edit, copy, download, or start over.
+            <h2 className="mt-2 text-3xl sm:text-4xl lg:text-5xl font-display font-extrabold text-[var(--text)]">Three documents. No login. No clutter.</h2>
+            <p className="mt-4 leading-7 lg:leading-8 text-[var(--muted)]">
+              The app stays focused on the core flow: record audio, generate career copy, then let the user edit, copy, download, or start over.
             </p>
           </div>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {outputs.map((output) => (
               <Card key={output.title} variant="solid" padding="lg">
-                <output.icon size={26} className="text-[var(--accent)]" />
-                <h3 className="mt-5 text-xl font-display font-bold text-[var(--text)]">{output.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-[var(--muted)]">{output.copy}</p>
+                <output.icon size={24} sm:size={26} className="text-[var(--accent)]" />
+                <h3 className="mt-4 text-lg sm:text-xl font-display font-bold text-[var(--text)]">{output.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{output.copy}</p>
               </Card>
             ))}
           </div>

@@ -173,6 +173,23 @@ html {
   font-size: clamp(14px, 0.875rem + 0.25vw, 16px);
 }
 
+/* Fluid spacing scale */
+:root {
+  --space-xs: clamp(0.25rem, 0.2rem + 0.25vw, 0.5rem);
+  --space-sm: clamp(0.5rem, 0.4rem + 0.5vw, 0.75rem);
+  --space-md: clamp(1rem, 0.8rem + 1vw, 1.5rem);
+  --space-lg: clamp(1.5rem, 1.2rem + 1.5vw, 2.5rem);
+  --space-xl: clamp(2rem, 1.5rem + 2.5vw, 4rem);
+  --space-2xl: clamp(3rem, 2rem + 5vw, 6rem);
+}
+
+/* Fluid container max-widths */
+.container-sm { max-width: 640px; }
+.container-md { max-width: 768px; }
+.container-lg { max-width: 1024px; }
+.container-xl { max-width: 1280px; }
+.container-2xl { max-width: 1536px; }
+
 /* ========== ACCESSIBILITY ========== */
 
 :focus-visible {
@@ -321,15 +338,77 @@ html {
   }
 }
 
-/* Safe area insets for notched devices */
+/* Safe area insets for notches */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
   .app-shell {
     padding-bottom: env(safe-area-inset-bottom);
   }
 }
 
-/* Prevent horizontal overflow globally */
-main, section, article {
+/* Prevent horizontal overflow */
+main, section, article, .page-content {
   max-width: 100%;
   overflow-x: hidden;
+}
+
+/* Responsive grid helpers */
+.grid-responsive-1 {
+  display: grid;
+  gap: var(--space-md);
+}
+@media (min-width: 640px) {
+  .grid-responsive-2 { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1024px) {
+  .grid-responsive-3 { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* Fluid card padding */
+.card-padding-sm { padding: var(--space-sm); }
+.card-padding-md { padding: var(--space-md); }
+.card-padding-lg { padding: var(--space-lg); }
+@media (min-width: 768px) {
+  .card-padding-md { padding: var(--space-lg); }
+  .card-padding-lg { padding: var(--space-xl); }
+}
+
+/* Responsive text utilities */
+.text-fluid-sm { font-size: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem); }
+.text-fluid-base { font-size: clamp(0.875rem, 0.8rem + 0.375vw, 1rem); }
+.text-fluid-lg { font-size: clamp(1rem, 0.9rem + 0.5vw, 1.125rem); }
+.text-fluid-xl { font-size: clamp(1.125rem, 1rem + 0.625vw, 1.25rem); }
+.text-fluid-2xl { font-size: clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem); }
+.text-fluid-3xl { font-size: clamp(1.5rem, 1.25rem + 1.25vw, 2rem); }
+.text-fluid-4xl { font-size: clamp(2rem, 1.5rem + 2.5vw, 3rem); }
+.text-fluid-5xl { font-size: clamp(2.5rem, 1.75rem + 3.75vw, 4rem); }
+
+/* Responsive section spacing */
+.section-py { padding-block: var(--space-lg); }
+@media (min-width: 768px) {
+  .section-py { padding-block: var(--space-xl); }
+}
+@media (min-width: 1024px) {
+  .section-py { padding-block: var(--space-2xl); }
+}
+
+/* Hide scrollbar but keep scroll functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Focus visible for keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* Improved mobile form inputs */
+@media (max-width: 640px) {
+  input, textarea, select {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
 }

@@ -5,9 +5,16 @@ import { cn } from '../../lib/utils';
 interface PageWrapperProps {
   children: React.ReactNode;
   className?: string;
+  variant?: 'default' | 'narrow' | 'full';
 }
 
-export function PageWrapper({ children, className }: PageWrapperProps) {
+export function PageWrapper({ children, className, variant = 'default' }: PageWrapperProps) {
+  const variants = {
+    default: "max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12",
+    narrow: "max-w-[800px] mx-auto px-4 sm:px-6 md:px-8",
+    full: "w-full px-4 sm:px-6 md:px-8 lg:px-10"
+  };
+
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -16,7 +23,8 @@ export function PageWrapper({ children, className }: PageWrapperProps) {
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.3, ease: 'easeOut' }}
         className={cn(
-          "max-w-[1280px] mx-auto min-h-screen pt-28 pb-20 px-5 sm:px-8 md:px-10 w-full",
+          "min-h-screen pt-20 pb-12 sm:pt-24 sm:pb-16 lg:pt-28 lg:pb-20 w-full",
+          variants[variant],
           className
         )}
       >
