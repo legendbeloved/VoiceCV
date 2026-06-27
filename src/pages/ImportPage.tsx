@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'motion/react';
-import { Upload, FileText, Linkedin, ArrowRight, CheckCircle2, AlertCircle, Loader2, Briefcase, GraduationCap, Award, Info } from 'lucide-react';
+import { Upload, FileText, Linkedin, ArrowRight, CheckCircle2, AlertCircle, Loader2, Briefcase, GraduationCap, Award, Info, Clipboard, ClipboardCheck } from 'lucide-react';
 import { useVoiceCVStore } from '../store/useVoiceCVStore';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
@@ -14,7 +14,38 @@ export default function ImportPage({ onToast }: { onToast: (msg: string, v: 'suc
   const [loading, setLoading] = useState(false);
   const [parsedProfile, setParsedProfile] = useState<LinkedInProfile | null>(null);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const [pasteMode, setPasteMode] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const extractTextFromPDF = async (file: File): Promise<string> => {
+    const arrayBuffer = await file.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
+    
+    // Simple PDF text extraction - find text between BT and ET markers
+    const decoder = new TextDecoder('latin-1');
+    const content = decoder.decode(uint8Array);
+    
+    // Extract text from PDF streams
+    const textChunks: string[] = [];
+    const tjMatches = content.match(/\(([^)]+)\)\s*Tj/g) || [];
+    const tjArrayMatches = content.match(/\[([^\]]+)\]\s*TJ/g) || [];
+    
+    for (const match of tjMatches) {
+      const text = match.replace(/\(|\)\s*Tj/g, '');
+      if (text.trim()) textChunks.push(text);
+    }
+    
+    for (const match of tjArrayMatches) {
+      const inner = match.replace(/\[|\]\s*TJ/g, '');
+      const parts = inner.split(/\s+/);
+      for (const part of parts) {
+        const cleaned = part.replace(/[()]/g, '').trim();
+        if (cleaned && cleaned.length > 1) textChunks.push(cleaned);
+      }
+    }
+    
+    return textChunks.join(' ');
+  };
 
   const handleParse = async () => {
     if (!inputText.trim()) {
@@ -28,7 +59,7 @@ export default function ImportPage({ onToast }: { onToast: (msg: string, v: 'suc
       onToast('Profile parsed successfully.', 'success');
     } catch (error) {
       const msg = error instanceof Error && error.message.includes('API key')
-        ? 'Gemini API key is missing. Please check your .env file contains GEMINI_API_KEY.'
+        ? 'Gemini API key is missing. Add GEMINI_API_KEY to your .env.local file and restart the dev server.'
         : 'Failed to parse profile. Please try again.';
       onToast(msg, 'error');
     } finally {
@@ -90,13 +121,27 @@ export default function ImportPage({ onToast }: { onToast: (msg: string, v: 'suc
     const extension = file.name.split('.').pop()?.toLowerCase();
 
     if (extension === 'pdf') {
-      onToast('PDF files: Please open the PDF, select all text (Ctrl+A), copy (Ctrl+C), and paste it into the text area below.', 'info');
-      setImportMode('resume');
+      try {
+        onToast('Reading PDF file...', 'info');
+        const text = await extractTextFromPDF(file);
+        if (text.trim().length > 50) {
+          setInputText(text);
+          setImportMode('resume');
+          onToast(`PDF "${file.name}" loaded. Click Parse to extract profile data.`, 'success');
+        } else {
+          onToast('Could not extract enough text from PDF. Please open the PDF, select all text, copy and paste it manually.', 'error');
+          setPasteMode(true);
+        }
+      } catch {
+        onToast('Failed to read PDF. Please open it, select all text, copy and paste manually.', 'error');
+        setPasteMode(true);
+      }
       return;
     }
 
     if (extension === 'docx' || extension === 'doc') {
       onToast('Word files: Please open the document, select all text (Ctrl+A), copy (Ctrl+C), and paste it into the text area below.', 'info');
+      setPasteMode(true);
       setImportMode('resume');
       return;
     }
@@ -160,10 +205,10 @@ export default function ImportPage({ onToast }: { onToast: (msg: string, v: 'suc
                     className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[var(--border)] bg-[var(--surface)] p-8 sm:p-10 text-center cursor-pointer hover:border-[var(--accent)] hover:bg-[var(--accent-soft)] transition-all"
                   >
                     <Upload size={40} className="mb-4 text-[var(--muted)]" />
-                    <p className="text-sm font-bold text-[var(--text)]">Click to upload a text file (.txt)</p>
-                    <p className="mt-1 text-xs text-[var(--muted)]">For PDF/Word: Open the file, select all text, copy and paste below</p>
+                    <p className="text-sm font-bold text-[var(--text)]">Click to upload PDF, Word, or text file</p>
+                    <p className="mt-1 text-xs text-[var(--muted)]">Supports .pdf, .docx, .doc, .txt, .csv</p>
                   </div>
-                  <input ref={fileInputRef} type="file" accept=".txt,.csv" onChange={handleFileUpload} className="hidden" />
+                  <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx,.txt,.csv" onChange={handleFileUpload} className="hidden" />
                   
                   {uploadedFileName && (
                     <div className="flex items-center gap-2 p-3 rounded-xl bg-[var(--accent-soft)] border border-[var(--accent)]/20">
@@ -172,14 +217,10 @@ export default function ImportPage({ onToast }: { onToast: (msg: string, v: 'suc
                     </div>
                   )}
 
-                  <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
-                    <p className="text-xs font-bold uppercase tracking-widest text-[var(--muted)] mb-2">How to import PDF/Word resumes:</p>
-                    <ol className="text-xs text-[var(--muted)] space-y-1 list-decimal list-inside">
-                      <li>Open your resume PDF or Word document</li>
-                      <li>Select all text (Ctrl+A / Cmd+A)</li>
-                      <li>Copy it (Ctrl+C / Cmd+C)</li>
-                      <li>Paste it in the text area below (Ctrl+V / Cmd+V)</li>
-                    </ol>
+                  <div className="flex items-center gap-2">
+                    <div className="h-px flex-1 bg-[var(--border)]" />
+                    <span className="text-xs font-bold uppercase tracking-widest text-[var(--muted)]">or paste manually</span>
+                    <div className="h-px flex-1 bg-[var(--border)]" />
                   </div>
 
                   <div>

@@ -4,8 +4,8 @@ import path from 'path';
 import {defineConfig, loadEnv} from 'vite';
 
 export default defineConfig(({mode}) => {
-  // Load from .env.local first, then .env as fallback
-  const env = loadEnv(mode, '.', ['local', '']);
+  // Vite automatically loads .env, .env.local, .env.[mode], .env.[mode].local
+  const env = loadEnv(mode, '.', '');
   return {
     plugins: [react(), tailwindcss()],
     define: {
