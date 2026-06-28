@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { ArrowRight, ClipboardCheck, FileText, Linkedin, Mic2, Sparkles, Timer, Wand2, Target, Mail, Upload, Route, Users, Palette, Database } from 'lucide-react';
+import { ArrowRight, ClipboardCheck, FileText, Linkedin, Mic2, Sparkles, Wand2, Target, Mail, Upload, Route, Users, Palette, Database } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Link } from 'react-router-dom';
@@ -33,10 +33,6 @@ export function LandingPage({ onStart }: LandingPageProps) {
             transition={{ duration: 0.55 }}
             className="max-w-3xl mx-auto lg:mx-0"
           >
-            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--panel)] px-4 py-2 text-xs font-bold uppercase tracking-[0.22em] text-[var(--muted)]">
-              <Timer size={14} className="text-[var(--accent)]" />
-              60-second career documents
-            </div>
 
             <h1 className="mt-6 font-display font-extrabold leading-[0.95] text-[var(--text)] text-4xl sm:text-5xl lg:text-6xl xl:text-7xl">
               Speak once. Land the job.
@@ -102,7 +98,7 @@ export function LandingPage({ onStart }: LandingPageProps) {
 
       <section id="how-it-works" className="py-16 sm:py-20 lg:py-24">
         <div className="mb-8 lg:mb-10 max-w-2xl">
-          <p className="text-xs font-black uppercase tracking-[0.28em] text-[var(--accent)]">Simple flow</p>
+
           <h2 className="mt-2 text-3xl sm:text-4xl lg:text-5xl font-display font-extrabold text-[var(--text)]">Built for people who know what to say, not how to format it.</h2>
         </div>
         <div className="grid gap-4 sm:gap-5 lg:gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -119,7 +115,7 @@ export function LandingPage({ onStart }: LandingPageProps) {
       <section id="outputs" className="pb-16 sm:pb-20 lg:pb-24">
         <div className="grid gap-6 lg:gap-8 lg:grid-cols-[0.8fr_1fr] lg:items-start">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.28em] text-[var(--accent)]">MVP outputs</p>
+
             <h2 className="mt-2 text-3xl sm:text-4xl lg:text-5xl font-display font-extrabold text-[var(--text)]">Three documents. No login. No clutter.</h2>
             <p className="mt-4 leading-7 lg:leading-8 text-[var(--muted)]">
               The app stays focused on the core flow: record audio, generate career copy, then let the user edit, copy, download, or start over.
@@ -139,7 +135,7 @@ export function LandingPage({ onStart }: LandingPageProps) {
 
       <section id="features" className="pb-16 sm:pb-20 lg:pb-24">
         <div className="mb-8 lg:mb-10 max-w-2xl">
-          <p className="text-xs font-black uppercase tracking-[0.28em] text-[var(--accent)]">All Features</p>
+
           <h2 className="mt-2 text-3xl sm:text-4xl lg:text-5xl font-display font-extrabold text-[var(--text)]">Everything you need to land your next role.</h2>
           <p className="mt-4 text-[var(--muted)]">From voice recording to career path planning. Explore all the tools VoiceCV offers.</p>
         </div>
