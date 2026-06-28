@@ -63,11 +63,12 @@ export function Navbar({ onLogoClick, theme, onThemeToggle }: NavbarProps) {
         </div>
       </button>
 
-      <nav className="hidden lg:flex items-center gap-8">
+      <nav className="hidden lg:flex items-center gap-6">
         <Link to="/record" className="text-[10px] font-black uppercase tracking-[0.25em] text-[var(--muted)] hover:text-[var(--text)] transition-all duration-300">Record</Link>
         <Link to="/profiles" className="text-[10px] font-black uppercase tracking-[0.25em] text-[var(--muted)] hover:text-[var(--text)] transition-all duration-300">Profiles</Link>
         <Link to="/ats-optimizer" className="text-[10px] font-black uppercase tracking-[0.25em] text-[var(--muted)] hover:text-[var(--text)] transition-all duration-300">ATS</Link>
         <Link to="/cover-letter" className="text-[10px] font-black uppercase tracking-[0.25em] text-[var(--muted)] hover:text-[var(--text)] transition-all duration-300">Cover Letter</Link>
+        <Link to="/import" className="text-[10px] font-black uppercase tracking-[0.25em] text-[var(--muted)] hover:text-[var(--text)] transition-all duration-300">Import</Link>
         <Link to="/career-path" className="text-[10px] font-black uppercase tracking-[0.25em] text-[var(--muted)] hover:text-[var(--text)] transition-all duration-300">Career Path</Link>
       </nav>
 
@@ -112,23 +113,22 @@ export function Navbar({ onLogoClick, theme, onThemeToggle }: NavbarProps) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -12, scale: 0.98 }}
               transition={{ duration: 0.18, ease: 'easeOut' }}
-              className="fixed left-4 right-4 top-24 z-50 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-3xl border border-[var(--border)] bg-[var(--bg)] p-4 shadow-[var(--shadow)] lg:hidden"
+              className="fixed left-4 right-4 top-24 z-50 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-3xl border border-[var(--border)] bg-[var(--bg)] p-3 shadow-[var(--shadow)] lg:hidden scrollbar-thin"
               aria-label="Mobile navigation"
             >
-              <div className="mb-3 rounded-2xl bg-[var(--surface)] p-4">
+              <div className="mb-2 rounded-2xl bg-[var(--surface)] px-4 py-3">
                 <p className="text-[10px] font-black uppercase tracking-[0.26em] text-[var(--accent)]">Menu</p>
-                <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Move through the VoiceCV flow or access all features.</p>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-0.5">
                 {mobileLinks.map((item) => {
                   const Icon = item.icon;
                   const content = (
-                    <span className={`flex items-center gap-3 rounded-2xl border px-4 py-3.5 transition-all ${item.active ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--text)]' : 'border-transparent text-[var(--muted)] hover:border-[var(--border)] hover:bg-[var(--surface)] hover:text-[var(--text)]'}`}>
-                      <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${item.active ? 'bg-[var(--accent)] text-[var(--on-accent)]' : 'bg-[var(--surface)] text-[var(--accent)]'}`}>
-                        <Icon size={18} />
+                    <span className={`flex items-center gap-2.5 rounded-xl border px-3 py-2 transition-all ${item.active ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--text)]' : 'border-transparent text-[var(--muted)] hover:border-[var(--border)] hover:bg-[var(--surface)] hover:text-[var(--text)]'}`}>
+                      <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${item.active ? 'bg-[var(--accent)] text-[var(--on-accent)]' : 'bg-[var(--surface)] text-[var(--accent)]'}`}>
+                        <Icon size={14} />
                       </span>
-                      <span className="font-display text-sm font-bold uppercase tracking-[0.08em]">{item.label}</span>
+                      <span className="font-display text-[11px] font-bold uppercase tracking-[0.08em]">{item.label}</span>
                     </span>
                   );
 
@@ -140,12 +140,12 @@ export function Navbar({ onLogoClick, theme, onThemeToggle }: NavbarProps) {
                 })}
               </div>
 
-              <div className="mt-4 flex justify-end">
+              <div className="mt-3 flex justify-end border-t border-[var(--border)] pt-3">
                 <Button
                   variant="icon"
                   aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
                   onClick={onThemeToggle}
-                  className="h-12 w-12"
+                  className="h-10 w-10"
                 >
                   {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
                 </Button>

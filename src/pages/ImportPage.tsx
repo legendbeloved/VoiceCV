@@ -7,6 +7,16 @@ import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { parseLinkedInProfile, LinkedInProfile, CareerAssets } from '../lib/gemini';
 
+// docx text extraction
+// @ts-ignore - mammoth has no types
+import mammoth from 'mammoth';
+
+async function extractTextFromDocx(file: File): Promise<string> {
+  const arrayBuffer = await file.arrayBuffer();
+  const result = await mammoth.extractRawText({ arrayBuffer });
+  return result.value;
+}
+
 export default function ImportPage({ onToast }: { onToast: (msg: string, v: 'success' | 'error' | 'info') => void }) {
   const { setAssets, setJobRole, setTranscript } = useVoiceCVStore();
   const [importMode, setImportMode] = useState<'linkedin' | 'resume'>('linkedin');
@@ -140,9 +150,21 @@ export default function ImportPage({ onToast }: { onToast: (msg: string, v: 'suc
     }
 
     if (extension === 'docx' || extension === 'doc') {
-      onToast('Word files: Please open the document, select all text (Ctrl+A), copy (Ctrl+C), and paste it into the text area below.', 'info');
-      setPasteMode(true);
-      setImportMode('resume');
+      try {
+        onToast('Reading Word document...', 'info');
+        const text = await extractTextFromDocx(file);
+        if (text.trim().length > 50) {
+          setInputText(text);
+          setImportMode('resume');
+          onToast(`Word document "${file.name}" loaded. Click Parse to extract profile data.`, 'success');
+        } else {
+          onToast('Could not extract enough text from Word document. Please copy and paste the content manually.', 'error');
+          setPasteMode(true);
+        }
+      } catch {
+        onToast('Failed to read Word document. Please copy and paste the content manually.', 'error');
+        setPasteMode(true);
+      }
       return;
     }
 

@@ -1,9 +1,16 @@
-import React, { useState } from 'react';
-import { Download, ChevronUp, FileText, FileJson } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Download, ChevronUp, FileText, FileType } from 'lucide-react';
 import { Button } from '../ui/Button';
-import { Card } from '../ui/Card';
 import { motion, AnimatePresence } from 'motion/react';
-import { generateResumePDF, generateCoverLetterPDF, generateLinkedInBioPDF, generateInterviewPrepPDF, downloadAsText } from '../../lib/pdf';
+import {
+  generateResumePDF,
+  generateCoverLetterPDF,
+  generateLinkedInBioPDF,
+  generateInterviewPrepPDF,
+  downloadAsText,
+} from '../../lib/pdf';
+
+// ─── Types ──────────────────────────────────────────────────────────────────
 
 interface DownloadButtonProps {
   documentType: 'resume' | 'coverLetter' | 'linkedinBio' | 'interviewPrep';
@@ -11,70 +18,125 @@ interface DownloadButtonProps {
   candidateName: string;
 }
 
+// ─── PDF generator map ──────────────────────────────────────────────────────
+
+const pdfGenerators: Record<DownloadButtonProps['documentType'], (c: string, n: string) => void> = {
+  resume: generateResumePDF,
+  coverLetter: generateCoverLetterPDF,
+  linkedinBio: generateLinkedInBioPDF,
+  interviewPrep: generateInterviewPrepPDF,
+};
+
+const labelMap: Record<DownloadButtonProps['documentType'], string> = {
+  resume: 'Resume',
+  coverLetter: 'CoverLetter',
+  linkedinBio: 'LinkedInBio',
+  interviewPrep: 'InterviewPrep',
+};
+
+// ─── Component ──────────────────────────────────────────────────────────────
+
 export function DownloadButton({ documentType, content, candidateName }: DownloadButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on outside click
+  const handleClickOutside = useCallback((e: MouseEvent) => {
+    if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      setIsOpen(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isOpen, handleClickOutside]);
+
+  // Close on Escape key
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+    if (isOpen) {
+      document.addEventListener('keydown', handleKey);
+      return () => document.removeEventListener('keydown', handleKey);
+    }
+  }, [isOpen]);
 
   const handleDownload = async (format: 'pdf' | 'txt') => {
     setIsGenerating(true);
     setIsOpen(false);
-    
-    // Small delay to show loading state
-    await new Promise(r => setTimeout(r, 800));
+
+    // Small delay so the loading spinner renders before the synchronous PDF work blocks the main thread
+    await new Promise((r) => setTimeout(r, 100));
 
     try {
       if (format === 'pdf') {
-        if (documentType === 'resume') generateResumePDF(content, candidateName);
-        if (documentType === 'coverLetter') generateCoverLetterPDF(content, candidateName);
-        if (documentType === 'linkedinBio') generateLinkedInBioPDF(content, candidateName);
-        if (documentType === 'interviewPrep') generateInterviewPrepPDF(content, candidateName);
+        const generator = pdfGenerators[documentType];
+        generator(content, candidateName);
       } else {
-        const filename = `${candidateName.replace(/\s+/g, '_')}_${documentType}`;
-        downloadAsText(content, filename);
+        const safeName = candidateName.replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+        downloadAsText(content, `${safeName}-${labelMap[documentType]}`);
       }
+    } catch (err) {
+      console.error(`[DownloadButton] ${format.toUpperCase()} generation failed:`, err);
     } finally {
       setIsGenerating(false);
     }
   };
 
   return (
-    <div className="relative">
+    <div ref={containerRef} className="relative">
+      {/* ── Dropdown menu (glass panel, positioned above) ── */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-            animate={{ opacity: 1, y: -8, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            className="absolute bottom-full left-0 mb-2 w-48 z-50"
+            initial={{ opacity: 0, y: 6, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 6, scale: 0.95 }}
+            transition={{ duration: 0.15, ease: 'easeOut' }}
+            className="absolute bottom-full left-0 mb-2 w-52 z-50"
           >
-            <Card variant="glass" padding="sm" className="shadow-2xl border-white/10">
-              <div className="flex flex-col gap-2">
+            <div className="rounded-2xl border border-white/[0.08] bg-[var(--panel)]/90 backdrop-blur-xl shadow-[0_16px_48px_rgba(0,0,0,0.35)] overflow-hidden">
+              <div className="flex flex-col p-1.5 gap-0.5">
                 <button
+                  id="download-pdf-option"
                   onClick={() => handleDownload('pdf')}
-                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--surface)] transition-all text-xs font-bold uppercase tracking-widest text-[var(--muted)] hover:text-[var(--text)]"
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[var(--surface)] transition-colors text-xs font-bold uppercase tracking-widest text-[var(--muted)] hover:text-[var(--text)]"
                 >
-                  <FileText size={16} className="text-brand-violet" />
+                  <FileText size={16} className="text-[var(--accent)] shrink-0" />
                   Download as PDF
                 </button>
                 <button
+                  id="download-txt-option"
                   onClick={() => handleDownload('txt')}
-                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--surface)] transition-all text-xs font-bold uppercase tracking-widest text-[var(--muted)] hover:text-[var(--text)]"
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[var(--surface)] transition-colors text-xs font-bold uppercase tracking-widest text-[var(--muted)] hover:text-[var(--text)]"
                 >
-                  <FileJson size={16} className="text-voice-amber" />
+                  <FileType size={16} className="text-amber-400 shrink-0" />
                   Download as TXT
                 </button>
               </div>
-            </Card>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* ── Trigger button ── */}
       <Button
+        id="download-trigger"
         size="sm"
         loading={isGenerating}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => setIsOpen((prev) => !prev)}
         className="h-10 px-6 rounded-xl"
-        rightIcon={<ChevronUp size={16} className={isOpen ? 'rotate-180 transition-transform' : 'transition-transform'} />}
+        rightIcon={
+          <ChevronUp
+            size={16}
+            className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+          />
+        }
       >
         <Download size={16} className="mr-2" />
         Download

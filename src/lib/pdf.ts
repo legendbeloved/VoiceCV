@@ -1,261 +1,343 @@
 import jsPDF from 'jspdf';
-import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
-import { saveAs } from 'file-saver';
 
-export async function generateResumeDOCX(resumeText: string, candidateName: string): Promise<void> {
-  const lines = resumeText.split('\n');
-  const children = lines.map(line => {
-    const trimmed = line.trim();
-    const isHeader = (trimmed === trimmed.toUpperCase() && trimmed.length > 3) || trimmed.startsWith('#');
-    const cleanLine = trimmed.replace(/^#+\s*/, '');
+// ─── Constants ──────────────────────────────────────────────────────────────
+const MARGIN = 20;
+const ACCENT_RGB: [number, number, number] = [124, 58, 237];
+const BODY_RGB: [number, number, number] = [26, 26, 46];
+const MUTED_RGB: [number, number, number] = [100, 100, 100];
+const FOOTER_RGB: [number, number, number] = [150, 150, 150];
+const LINE_HEIGHT = 5;
+const SECTION_GAP = 5;
+const BULLET_INDENT = 5;
 
-    if (isHeader) {
-      return new Paragraph({
-        text: cleanLine,
-        heading: HeadingLevel.HEADING_1,
-        spacing: { before: 240, after: 120 }
-      });
-    }
-    
-    return new Paragraph({
-      children: [new TextRun(trimmed)],
-      spacing: { after: 120 }
-    });
-  });
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
-  const doc = new Document({
-    sections: [{
-      properties: {},
-      children: [
-        new Paragraph({
-          text: candidateName,
-          heading: HeadingLevel.TITLE,
-        }),
-        ...children
-      ],
-    }],
-  });
-
-  const blob = await Packer.toBlob(doc);
-  saveAs(blob, `${candidateName.replace(/\s+/g, '_')}_Resume.docx`);
+/** Safe filename from candidate name. */
+function safeName(name: string): string {
+  return name.replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
 }
 
-export function generateResumePDF(resumeText: string, candidateName: string): void {
-  const doc = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: 'a4'
-  });
-
-  const margin = 20;
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const contentWidth = pageWidth - (margin * 2);
-  let cursorY = margin;
-
-  // Header: Name
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(20);
-  doc.setTextColor(26, 26, 46);
-  doc.text(candidateName, margin, cursorY);
-  cursorY += 8;
-
-  // Horizontal Rule
-  doc.setDrawColor(124, 58, 237);
-  doc.setLineWidth(0.5);
-  doc.line(margin, cursorY, pageWidth - margin, cursorY);
-  cursorY += 10;
-
-  // Split content by sections (Assuming headers are roughly like "EXPERIENCE", "SKILLS", "EDUCATION")
-  // For a robust implementation, we split by lines and look for all-caps or markdown headers
-  const lines = resumeText.split('\n');
-  
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-
-  lines.forEach((line) => {
-    const trimmed = line.trim();
-    if (!trimmed) {
-      cursorY += 2;
-      return;
-    }
-
-    // Check if it's a header (all caps or starting with ##)
-    const isHeader = trimmed === trimmed.toUpperCase() && trimmed.length > 3 || trimmed.startsWith('#');
-    const cleanLine = trimmed.replace(/^#+\s*/, '');
-
-    if (isHeader) {
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(11);
-      doc.setTextColor(124, 58, 237);
-      
-      if (cursorY + 10 > doc.internal.pageSize.getHeight() - margin) {
-        doc.addPage();
-        cursorY = margin;
-      }
-      
-      cursorY += 5;
-      doc.text(cleanLine, margin, cursorY);
-      cursorY += 6;
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(10);
-      doc.setTextColor(40, 40, 40);
-    } else {
-      const isBullet = trimmed.startsWith('*') || trimmed.startsWith('-');
-      let textToPrint = cleanLine;
-      let xPos = margin;
-
-      if (isBullet) {
-        textToPrint = '- ' + trimmed.substring(1).trim();
-        xPos = margin + 5;
-      }
-
-      const splitText = doc.splitTextToSize(textToPrint, isBullet ? contentWidth - 5 : contentWidth);
-      
-      splitText.forEach((t: string) => {
-        if (cursorY + 5 > doc.internal.pageSize.getHeight() - margin) {
-          addFooter(doc);
-          doc.addPage();
-          cursorY = margin;
-        }
-        doc.text(t, xPos, cursorY);
-        cursorY += 5;
-      });
-    }
-  });
-
-  addFooter(doc);
-  doc.save(`${candidateName.replace(/\s+/g, '_')}_Resume.pdf`);
+/** True when a trimmed line looks like a section header (ALL CAPS ≥ 3 chars, or starts with #). */
+function isSectionHeader(line: string): boolean {
+  const t = line.trim();
+  if (t.length < 3) return false;
+  if (t.startsWith('#')) return true;
+  // All caps (ignoring non-alpha characters like colons, dashes)
+  const alpha = t.replace(/[^a-zA-Z]/g, '');
+  return alpha.length >= 3 && alpha === alpha.toUpperCase();
 }
 
-export function generateCoverLetterPDF(coverLetterText: string, candidateName: string): void {
-  const doc = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: 'a4'
-  });
-
-  const margin = 20;
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const contentWidth = pageWidth - (margin * 2);
-  let cursorY = margin;
-
-  // Header
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(14);
-  doc.text(candidateName, margin, cursorY);
-  
-  // Date
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-  doc.text(date, pageWidth - margin - doc.getTextWidth(date), cursorY);
-  
-  cursorY += 20;
-  
-  // Content
-  const splitText = doc.splitTextToSize(coverLetterText, contentWidth);
-  doc.text(splitText, margin, cursorY);
-
-  addFooter(doc);
-  doc.save(`${candidateName.replace(/\s+/g, '_')}_CoverLetter.pdf`);
+/** Strip leading # symbols from markdown headers. */
+function cleanHeader(line: string): string {
+  return line.trim().replace(/^#+\s*/, '');
 }
 
-export function generateLinkedInBioPDF(bioText: string, candidateName: string): void {
-  const doc = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: 'a4'
-  });
-
-  const margin = 20;
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const contentWidth = pageWidth - (margin * 2);
-  let cursorY = margin;
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
-  doc.text('LinkedIn About Section', margin, cursorY);
-  cursorY += 8;
-  
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(100, 100, 100);
-  doc.text(`For ${candidateName}`, margin, cursorY);
-  cursorY += 15;
-
-  doc.setTextColor(40, 40, 40);
-  const splitText = doc.splitTextToSize(bioText, contentWidth);
-  doc.text(splitText, margin, cursorY);
-  
-  cursorY += (splitText.length * 5) + 10;
-  doc.setFontSize(8);
-  doc.text(`Character count: ${bioText.length}`, margin, cursorY);
-
-  addFooter(doc);
-  doc.save(`${candidateName.replace(/\s+/g, '_')}_LinkedInBio.pdf`);
+/** True when a line is a bullet point (* or - prefix). */
+function isBullet(line: string): boolean {
+  const t = line.trim();
+  return t.startsWith('* ') || t.startsWith('- ') || t.startsWith('• ');
 }
 
-export function generateInterviewPrepPDF(prepText: string, candidateName: string): void {
-  const doc = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: 'a4'
-  });
-
-  const margin = 20;
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const contentWidth = pageWidth - (margin * 2);
-  let cursorY = margin;
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(18);
-  doc.setTextColor(124, 58, 237);
-  doc.text('Interview Preparation Guide', margin, cursorY);
-  cursorY += 8;
-  
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(100, 100, 100);
-  doc.text(`Strategic guide for ${candidateName}`, margin, cursorY);
-  cursorY += 15;
-
-  doc.setTextColor(40, 40, 40);
-  const splitText = doc.splitTextToSize(prepText, contentWidth);
-  
-  splitText.forEach((line: string) => {
-    if (cursorY + 5 > doc.internal.pageSize.getHeight() - margin) {
-      addFooter(doc);
-      doc.addPage();
-      cursorY = margin;
-    }
-    doc.text(line, margin, cursorY);
-    cursorY += 5;
-  });
-
-  addFooter(doc);
-  doc.save(`${candidateName.replace(/\s+/g, '_')}_Interview_Prep.pdf`);
+/** Strip bullet prefix and return clean text. */
+function cleanBullet(line: string): string {
+  return line.trim().replace(/^[*\-•]\s*/, '');
 }
 
-export function downloadAsText(content: string, filename: string): void {
-  const blob = new Blob([content], { type: 'text/plain' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename.endsWith('.txt') ? filename : `${filename}.txt`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
+/** Stamp "Generated by VoiceCV • voicecv.app" footer on every page. */
+function stampFooters(doc: jsPDF): void {
+  const pageCount = doc.getNumberOfPages();
+  const footerText = 'Generated by VoiceCV \u2022 voicecv.app';
 
-function addFooter(doc: jsPDF) {
-  const pageCount = (doc as any).internal.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
+    doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
-    doc.setTextColor(150, 150, 150);
-    const footerText = 'Generated by VoiceCV - voicecv.app';
-    const x = doc.internal.pageSize.getWidth() / 2 - doc.getTextWidth(footerText) / 2;
-    doc.text(footerText, x, doc.internal.pageSize.getHeight() - 10);
+    doc.setTextColor(...FOOTER_RGB);
+
+    const textWidth = doc.getTextWidth(footerText);
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    doc.text(footerText, (pageWidth - textWidth) / 2, pageHeight - 10);
   }
+}
+
+/** Check if cursor would overflow the printable area, and add a page if so. */
+function ensureSpace(doc: jsPDF, cursorY: number, needed: number): number {
+  const maxY = doc.internal.pageSize.getHeight() - MARGIN - 15; // leave room for footer
+  if (cursorY + needed > maxY) {
+    doc.addPage();
+    return MARGIN;
+  }
+  return cursorY;
+}
+
+// ─── 1. Resume PDF ──────────────────────────────────────────────────────────
+
+export function generateResumePDF(resumeText: string, candidateName: string): void {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const contentWidth = pageWidth - MARGIN * 2;
+  let y = MARGIN;
+
+  // ── Candidate Name ──
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(20);
+  doc.setTextColor(...BODY_RGB);
+  doc.text(candidateName, MARGIN, y);
+  y += 8;
+
+  // ── Thin violet horizontal rule ──
+  doc.setDrawColor(...ACCENT_RGB);
+  doc.setLineWidth(0.35);
+  doc.line(MARGIN, y, pageWidth - MARGIN, y);
+  y += 10;
+
+  // ── Parse and render lines ──
+  const lines = resumeText.split('\n');
+
+  for (const rawLine of lines) {
+    const trimmed = rawLine.trim();
+
+    // Blank line → small vertical gap
+    if (!trimmed) {
+      y += 2;
+      continue;
+    }
+
+    // ── Section Header ──
+    if (isSectionHeader(trimmed)) {
+      const headerText = cleanHeader(trimmed);
+      y = ensureSpace(doc, y, 12);
+
+      y += SECTION_GAP;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(...ACCENT_RGB);
+      doc.text(headerText, MARGIN, y);
+      y += 6;
+
+      // Reset to body style
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(...BODY_RGB);
+      continue;
+    }
+
+    // ── Bullet Point ──
+    if (isBullet(trimmed)) {
+      const bulletText = '\u2022  ' + cleanBullet(trimmed);
+      const xPos = MARGIN + BULLET_INDENT;
+      const wrappedLines: string[] = doc.splitTextToSize(bulletText, contentWidth - BULLET_INDENT);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(...BODY_RGB);
+
+      for (const segment of wrappedLines) {
+        y = ensureSpace(doc, y, LINE_HEIGHT);
+        doc.text(segment, xPos, y);
+        y += LINE_HEIGHT;
+      }
+      continue;
+    }
+
+    // ── Regular Body Text ──
+    const wrappedLines: string[] = doc.splitTextToSize(trimmed, contentWidth);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(...BODY_RGB);
+
+    for (const segment of wrappedLines) {
+      y = ensureSpace(doc, y, LINE_HEIGHT);
+      doc.text(segment, MARGIN, y);
+      y += LINE_HEIGHT;
+    }
+  }
+
+  stampFooters(doc);
+  doc.save(`${safeName(candidateName)}-Resume.pdf`);
+}
+
+// ─── 2. Cover Letter PDF ────────────────────────────────────────────────────
+
+export function generateCoverLetterPDF(coverLetterText: string, candidateName: string): void {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const contentWidth = pageWidth - MARGIN * 2;
+  let y = MARGIN;
+
+  // ── Candidate Name (top-left) ──
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.setTextColor(...BODY_RGB);
+  doc.text(candidateName, MARGIN, y);
+
+  // ── Date (top-right) ──
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.setTextColor(...MUTED_RGB);
+  const dateStr = new Date().toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+  const dateWidth = doc.getTextWidth(dateStr);
+  doc.text(dateStr, pageWidth - MARGIN - dateWidth, y);
+  y += 6;
+
+  // ── Thin violet rule ──
+  doc.setDrawColor(...ACCENT_RGB);
+  doc.setLineWidth(0.35);
+  doc.line(MARGIN, y, pageWidth - MARGIN, y);
+  y += 14;
+
+  // ── Salutation ──
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.setTextColor(...BODY_RGB);
+  doc.text('Dear Hiring Manager,', MARGIN, y);
+  y += 10;
+
+  // ── Body ──
+  const paragraphs = coverLetterText.split('\n');
+
+  for (const para of paragraphs) {
+    const trimmed = para.trim();
+    if (!trimmed) {
+      y += 4;
+      continue;
+    }
+
+    const wrappedLines: string[] = doc.splitTextToSize(trimmed, contentWidth);
+
+    for (const segment of wrappedLines) {
+      y = ensureSpace(doc, y, LINE_HEIGHT);
+      doc.text(segment, MARGIN, y);
+      y += LINE_HEIGHT;
+    }
+    y += 2; // paragraph spacing
+  }
+
+  stampFooters(doc);
+  doc.save(`${safeName(candidateName)}-CoverLetter.pdf`);
+}
+
+// ─── 3. LinkedIn Bio PDF ────────────────────────────────────────────────────
+
+export function generateLinkedInBioPDF(bioText: string, candidateName: string): void {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const contentWidth = pageWidth - MARGIN * 2;
+  let y = MARGIN;
+
+  // ── Header ──
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
+  doc.setTextColor(...ACCENT_RGB);
+  doc.text('LinkedIn About Section', MARGIN, y);
+  y += 8;
+
+  // ── Subheader ──
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(12);
+  doc.setTextColor(...MUTED_RGB);
+  doc.text(`For ${candidateName}`, MARGIN, y);
+  y += 6;
+
+  // ── Thin violet rule ──
+  doc.setDrawColor(...ACCENT_RGB);
+  doc.setLineWidth(0.35);
+  doc.line(MARGIN, y, pageWidth - MARGIN, y);
+  y += 12;
+
+  // ── Body ──
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.setTextColor(...BODY_RGB);
+
+  const wrappedLines: string[] = doc.splitTextToSize(bioText, contentWidth);
+
+  for (const segment of wrappedLines) {
+    y = ensureSpace(doc, y, LINE_HEIGHT);
+    doc.text(segment, MARGIN, y);
+    y += LINE_HEIGHT;
+  }
+
+  // ── Character count ──
+  y += 12;
+  y = ensureSpace(doc, y, LINE_HEIGHT);
+  doc.setFontSize(8);
+  doc.setTextColor(...MUTED_RGB);
+  doc.text(`Character count: ${bioText.length}`, MARGIN, y);
+
+  stampFooters(doc);
+  doc.save(`${safeName(candidateName)}-LinkedInBio.pdf`);
+}
+
+// ─── 4. Interview Prep PDF ──────────────────────────────────────────────────
+
+export function generateInterviewPrepPDF(prepText: string, candidateName: string): void {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const contentWidth = pageWidth - MARGIN * 2;
+  let y = MARGIN;
+
+  // ── Header ──
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(18);
+  doc.setTextColor(...ACCENT_RGB);
+  doc.text('Interview Preparation Guide', MARGIN, y);
+  y += 8;
+
+  // ── Subheader ──
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(11);
+  doc.setTextColor(...MUTED_RGB);
+  doc.text(`Strategic guide for ${candidateName}`, MARGIN, y);
+  y += 6;
+
+  // ── Thin violet rule ──
+  doc.setDrawColor(...ACCENT_RGB);
+  doc.setLineWidth(0.35);
+  doc.line(MARGIN, y, pageWidth - MARGIN, y);
+  y += 12;
+
+  // ── Body ──
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.setTextColor(...BODY_RGB);
+
+  const wrappedLines: string[] = doc.splitTextToSize(prepText, contentWidth);
+
+  for (const segment of wrappedLines) {
+    y = ensureSpace(doc, y, LINE_HEIGHT);
+    doc.text(segment, MARGIN, y);
+    y += LINE_HEIGHT;
+  }
+
+  stampFooters(doc);
+  doc.save(`${safeName(candidateName)}-Interview-Prep.pdf`);
+}
+
+// ─── 5. Plain-text download ─────────────────────────────────────────────────
+
+export function downloadAsText(content: string, filename: string): void {
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename.endsWith('.txt') ? filename : `${filename}.txt`;
+  anchor.style.display = 'none';
+
+  document.body.appendChild(anchor);
+  anchor.click();
+
+  // Cleanup — schedule revocation so the browser has time to initiate the download
+  requestAnimationFrame(() => {
+    document.body.removeChild(anchor);
+    URL.revokeObjectURL(url);
+  });
 }

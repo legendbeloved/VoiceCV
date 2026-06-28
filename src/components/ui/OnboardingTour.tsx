@@ -1,11 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  Sparkles, Layers, Database, 
-  MessageSquare, Palette, ChevronRight, 
-  X, Check, Zap, Rocket, Mic2, FileText,
-  Target, Mail, Upload, Route, Users,
-  Lightbulb, Volume2
+  Sparkles, Mic2, FileText, Target, Mail, 
+  ChevronRight, X, Check, Rocket, Lightbulb
 } from 'lucide-react';
 import { Button } from './Button';
 import { GlassPanel } from './GlassPanel';
@@ -39,70 +36,21 @@ const TOUR_STEPS: TourStep[] = [
   },
   {
     title: "AI-Powered Documents",
-    description: "Gemini transcribes your voice, extracts career facts, and generates a resume, cover letter, and LinkedIn bio automatically.",
-    tip: "You can edit, rewrite, and download all generated documents.",
+    description: "Gemini transcribes your voice, extracts career facts, and generates a resume, cover letter, and LinkedIn bio automatically. Edit, rewrite, and download all documents.",
+    tip: "Paste a job description before generating for ATS keyword optimization.",
     icon: <FileText size={40} />,
     color: "from-brand-violet to-emerald-500",
   },
   {
-    title: "ATS Keyword Optimizer",
-    description: "Compare your resume against any job description. Get a match score, discover missing keywords, and receive AI-powered rewrite suggestions.",
-    tip: "Paste the job description before generating for the best ATS optimization.",
+    title: "Tailor for Any Role",
+    description: "Compare your resume against job descriptions, get match scores, discover missing keywords, and receive AI-powered rewrite suggestions. Generate company-specific cover letters.",
+    tip: "Different templates and tones work better for different industries.",
     icon: <Target size={40} />,
     color: "from-blue-500 to-brand-violet",
   },
   {
-    title: "Personalized Cover Letters",
-    description: "Generate company-specific cover letters that mention the company's mission, products, and culture. Each letter is tailored to the job description.",
-    tip: "Adding the company name helps Gemini research and personalize the letter.",
-    icon: <Mail size={40} />,
-    color: "from-emerald-500 to-blue-500",
-  },
-  {
-    title: "Multi-Profile Support",
-    description: "Save multiple profiles for different roles like 'Frontend Developer' and 'Product Manager'. Switch between them with different tone and template preferences.",
-    tip: "Create separate profiles for each job application for targeted results.",
-    icon: <Users size={40} />,
-    color: "from-fuchsia-500 to-brand-violet",
-  },
-  {
-    title: "Import Your Profile",
-    description: "Already have a LinkedIn profile or resume? Import it directly to bootstrap your VoiceCV. Supports text paste and file upload.",
-    tip: "Importing saves time by pre-filling your career data.",
-    icon: <Upload size={40} />,
-    color: "from-cyan-500 to-brand-violet",
-  },
-  {
-    title: "Career Path Suggestions",
-    description: "AI analyzes your skills and experience to suggest career progression paths, identify skill gaps, and recommend courses and certifications.",
-    tip: "Check back periodically as your skills grow for updated suggestions.",
-    icon: <Route size={40} />,
-    color: "from-voice-amber to-emerald-500",
-  },
-  {
     title: "Your Local Vault",
-    description: "Every document you generate is saved in your Local Vault. Search, filter, and access your career history anytime.",
-    tip: "Your data stays on your device - no cloud storage required.",
-    icon: <Database size={40} />,
-    color: "from-blue-500 to-brand-violet",
-  },
-  {
-    title: "Interview Simulator",
-    description: "Practice with an AI Hiring Manager that uses your actual resume context to ask realistic interview questions and provide feedback.",
-    tip: "Use the STAR method (Situation, Task, Action, Result) for best answers.",
-    icon: <MessageSquare size={40} />,
-    color: "from-voice-amber to-brand-violet",
-  },
-  {
-    title: "Visual Identity & Themes",
-    description: "Customize your documents with professional themes. Choose from multiple templates, color schemes, and layouts.",
-    tip: "Different themes work better for different industries.",
-    icon: <Palette size={40} />,
-    color: "from-fuchsia-500 to-brand-violet",
-  },
-  {
-    title: "You're All Set!",
-    description: "You now know all the features VoiceCV offers. Start recording your career story or explore any feature from the menu.",
+    description: "Every document you generate is saved locally on your device. Search, filter, and access your career history anytime - no cloud storage required. Practice interviews with AI using your actual resume context.",
     tip: "Bookmark VoiceCV for quick access to your career engine.",
     icon: <Sparkles size={40} />,
     color: "from-brand-violet to-emerald-500",
