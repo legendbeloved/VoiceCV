@@ -7,9 +7,27 @@ import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { parseLinkedInProfile, LinkedInProfile, CareerAssets } from '../lib/gemini';
 
-// docx text extraction
 // @ts-ignore - mammoth has no types
 import mammoth from 'mammoth';
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Set worker source
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+
+async function extractTextFromPDF(file: File): Promise<string> {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const textParts: string[] = [];
+  
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const pageText = content.items.map((item: any) => item.str).join(' ');
+    textParts.push(pageText);
+  }
+  
+  return textParts.join('\n\n');
+}
 
 async function extractTextFromDocx(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
@@ -26,36 +44,6 @@ export default function ImportPage({ onToast }: { onToast: (msg: string, v: 'suc
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [pasteMode, setPasteMode] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const extractTextFromPDF = async (file: File): Promise<string> => {
-    const arrayBuffer = await file.arrayBuffer();
-    const uint8Array = new Uint8Array(arrayBuffer);
-    
-    // Simple PDF text extraction - find text between BT and ET markers
-    const decoder = new TextDecoder('latin-1');
-    const content = decoder.decode(uint8Array);
-    
-    // Extract text from PDF streams
-    const textChunks: string[] = [];
-    const tjMatches = content.match(/\(([^)]+)\)\s*Tj/g) || [];
-    const tjArrayMatches = content.match(/\[([^\]]+)\]\s*TJ/g) || [];
-    
-    for (const match of tjMatches) {
-      const text = match.replace(/\(|\)\s*Tj/g, '');
-      if (text.trim()) textChunks.push(text);
-    }
-    
-    for (const match of tjArrayMatches) {
-      const inner = match.replace(/\[|\]\s*TJ/g, '');
-      const parts = inner.split(/\s+/);
-      for (const part of parts) {
-        const cleaned = part.replace(/[()]/g, '').trim();
-        if (cleaned && cleaned.length > 1) textChunks.push(cleaned);
-      }
-    }
-    
-    return textChunks.join(' ');
-  };
 
   const handleParse = async () => {
     if (!inputText.trim()) {
