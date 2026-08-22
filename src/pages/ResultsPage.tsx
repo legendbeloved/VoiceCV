@@ -251,7 +251,7 @@ export function ResultsPage({ onReset, onToast }: { onReset: () => void, onToast
                   <>
                     <Button variant="ghost" size="sm" onClick={handleEdit} leftIcon={<Edit3 size={16} />}>Edit</Button>
                     <CopyButton content={activeContent} onSuccess={(msg) => onToast(msg, 'success')} />
-                    <DownloadButton documentType={activeTab} content={activeContent} candidateName={assets.name} />
+                    <DownloadButton documentType={activeTab} content={activeContent} candidateName={assets.name} assets={assets} />
                   </>
                 )}
               </div>

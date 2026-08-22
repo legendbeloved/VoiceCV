@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FileText, Home, Menu, Mic2, Moon, Sparkles, Sun, X, Users, Target, Mail, Upload, Route, Palette, Briefcase, Database, Settings, MessageSquare } from 'lucide-react';
+import { Home, Menu, Mic2, Moon, Sparkles, Sun, X, Target, Mail, Upload, Route, Database, Settings } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from './Button';
 import { motion, AnimatePresence } from 'motion/react';
@@ -19,15 +19,11 @@ export function Navbar({ onLogoClick, theme, onThemeToggle }: NavbarProps) {
   const mobileLinks = [
     { label: 'Home', href: '/', icon: Home, active: location.pathname === '/' },
     { label: 'Record', href: '/record', icon: Mic2, active: location.pathname === '/record' },
-    { label: 'Profiles', href: '/profiles', icon: Users, active: location.pathname === '/profiles' },
     { label: 'ATS Optimizer', href: '/ats-optimizer', icon: Target, active: location.pathname === '/ats-optimizer' },
     { label: 'Cover Letter', href: '/cover-letter', icon: Mail, active: location.pathname === '/cover-letter' },
     { label: 'Import', href: '/import', icon: Upload, active: location.pathname === '/import' },
     { label: 'Career Path', href: '/career-path', icon: Route, active: location.pathname === '/career-path' },
-    { label: 'Themes', href: '/themes', icon: Palette, active: location.pathname === '/themes' },
-    { label: 'Portfolio', href: '/portfolio', icon: Briefcase, active: location.pathname === '/portfolio' },
     { label: 'Vault', href: '/vault', icon: Database, active: location.pathname === '/vault' },
-    { label: 'Interview', href: '/interview', icon: MessageSquare, active: location.pathname === '/interview' },
     { label: 'Settings', href: '/settings', icon: Settings, active: location.pathname === '/settings' },
   ];
 

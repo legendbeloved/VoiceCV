@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Download, ChevronUp, FileText, FileType } from 'lucide-react';
+import { Download, ChevronUp, FileText, FileType, FilePenLine } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -9,6 +9,8 @@ import {
   generateInterviewPrepPDF,
   downloadAsText,
 } from '../../lib/pdf';
+import { generateCareerDocx } from '../../lib/docx';
+import type { CareerAssets } from '../../lib/gemini';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -16,11 +18,12 @@ interface DownloadButtonProps {
   documentType: 'resume' | 'coverLetter' | 'linkedinBio' | 'interviewPrep';
   content: string;
   candidateName: string;
+  assets?: CareerAssets;
 }
 
 // ─── PDF generator map ──────────────────────────────────────────────────────
 
-const pdfGenerators: Record<DownloadButtonProps['documentType'], (c: string, n: string) => void> = {
+const pdfGenerators: Record<DownloadButtonProps['documentType'], (c: string, n: string, a?: CareerAssets) => void> = {
   resume: generateResumePDF,
   coverLetter: generateCoverLetterPDF,
   linkedinBio: generateLinkedInBioPDF,
@@ -36,7 +39,7 @@ const labelMap: Record<DownloadButtonProps['documentType'], string> = {
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-export function DownloadButton({ documentType, content, candidateName }: DownloadButtonProps) {
+export function DownloadButton({ documentType, content, candidateName, assets }: DownloadButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -66,7 +69,7 @@ export function DownloadButton({ documentType, content, candidateName }: Downloa
     }
   }, [isOpen]);
 
-  const handleDownload = async (format: 'pdf' | 'txt') => {
+  const handleDownload = async (format: 'pdf' | 'docx' | 'txt') => {
     setIsGenerating(true);
     setIsOpen(false);
 
@@ -76,7 +79,9 @@ export function DownloadButton({ documentType, content, candidateName }: Downloa
     try {
       if (format === 'pdf') {
         const generator = pdfGenerators[documentType];
-        generator(content, candidateName);
+        generator(content, candidateName, assets);
+      } else if (format === 'docx') {
+        await generateCareerDocx(documentType, content, candidateName, assets);
       } else {
         const safeName = candidateName.replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
         downloadAsText(content, `${safeName}-${labelMap[documentType]}`);
@@ -109,6 +114,14 @@ export function DownloadButton({ documentType, content, candidateName }: Downloa
                 >
                   <FileText size={16} className="text-[var(--accent)] shrink-0" />
                   Download as PDF
+                </button>
+                <button
+                  id="download-docx-option"
+                  onClick={() => handleDownload('docx')}
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[var(--surface)] transition-colors text-xs font-bold uppercase tracking-widest text-[var(--muted)] hover:text-[var(--text)]"
+                >
+                  <FilePenLine size={16} className="text-sky-400 shrink-0" />
+                  Download as DOCX
                 </button>
                 <button
                   id="download-txt-option"
