@@ -17,8 +17,8 @@ interface CardProps {
 
 const variantClasses: Record<CardVariant, string> = {
   glass: "bg-[var(--panel)] border border-[var(--border)] shadow-[var(--shadow)] backdrop-blur-xl",
-  solid: "bg-[var(--surface)] border border-[var(--border)]",
-  accent: "bg-[var(--accent-soft)] border border-[var(--border)] backdrop-blur-xl",
+  solid: "bg-[var(--surface)] border border-[var(--border)] shadow-sm",
+  accent: "bg-[var(--accent-soft)] border border-[var(--accent)]/40 backdrop-blur-xl",
   outline: "bg-transparent border-2 border-[var(--border)]",
   elevated: "bg-[var(--surface)] border border-[var(--border)] shadow-[var(--shadow)]",
 };
@@ -50,7 +50,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
         whileHover={shouldAnimate ? hoverAnimation : undefined}
         whileTap={onClick ? tapAnimation : undefined}
         className={cn(
-          "rounded-3xl overflow-hidden transition-all duration-300",
+          "rounded-3xl overflow-hidden transition-all duration-300 focus-within:ring-2 focus-within:ring-[var(--accent)]/55",
           variantClasses[variant],
           paddingClasses[padding],
           (interactive || onClick) && 'cursor-pointer',

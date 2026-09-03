@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { ArrowLeft, Download, Edit3, FileText, Gauge, HelpCircle, Linkedin, Mail, RefreshCw, Save, Sparkles, Target, X } from 'lucide-react';
 import Markdown from 'react-markdown';
+import { useNavigate } from 'react-router-dom';
 import { useVoiceCVStore } from '../store/useVoiceCVStore';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { CopyButton } from '../components/results/CopyButton';
 import { DownloadButton } from '../components/results/DownloadButton';
+import { useAuth } from '../auth/AuthProvider';
 import { DocumentType, refineCareerDocument, RewriteAction } from '../lib/gemini';
 
 const rewriteActions: Array<{ id: RewriteAction; label: string }> = [
@@ -39,6 +41,8 @@ function ScoreBar({ label, value }: { label: string; value: number }) {
 }
 
 export function ResultsPage({ onReset, onToast }: { onReset: () => void, onToast: (msg: string, variant: 'success' | 'error' | 'info') => void }) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const { assets, transcript, tone, resumeTemplate, jobDescription, updateAssetField } = useVoiceCVStore();
   const [activeTab, setActiveTab] = useState<DocumentType>('resume');
   const [isEditing, setIsEditing] = useState(false);
@@ -92,7 +96,7 @@ export function ResultsPage({ onReset, onToast }: { onReset: () => void, onToast
       onToast('Document rewritten.', 'success');
     } catch (error) {
       const message = error instanceof Error && error.message.includes('API key')
-        ? 'Gemini API key is missing. Add GEMINI_API_KEY to .env.local and restart.'
+        ? 'VoiceCV AI configuration is missing. Add GEMINI_API_KEY to .env.local and restart.'
         : 'Rewrite failed. Please try again.';
       onToast(message, 'error');
     } finally {
@@ -101,6 +105,10 @@ export function ResultsPage({ onReset, onToast }: { onReset: () => void, onToast
   };
 
   const handleDownloadBundle = () => {
+    if (!user) {
+      navigate('/login', { state: { from: { pathname: '/results' } } });
+      return;
+    }
     const bundle = [
       `VoiceCV Bundle for ${assets.name}`,
       `Role: ${assets.role}`,

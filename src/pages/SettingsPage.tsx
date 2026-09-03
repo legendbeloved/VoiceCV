@@ -8,9 +8,19 @@ import {
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { GlassPanel } from '../components/ui/GlassPanel';
+import { useAuth } from '../auth/AuthProvider';
+import { supabase } from '../lib/supabase';
 
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState('personalization');
+  const { user, signOut } = useAuth();
+  const [securityMessage, setSecurityMessage] = useState('');
+
+  const sendPasswordReset = async () => {
+    if (!user?.email || !supabase) return;
+    const { error } = await supabase.auth.resetPasswordForEmail(user.email, { redirectTo: `${window.location.origin}/login` });
+    setSecurityMessage(error ? error.message : 'Password reset instructions were sent to your email.');
+  };
 
   const sections = [
     { id: 'personalization', label: 'AI Personalization', icon: Brain },
@@ -72,7 +82,7 @@ export default function SettingsPage() {
                         <Brain size={20} className="text-brand-violet" />
                         AI Extraction Sensitivity
                       </h3>
-                      <p className="text-sm text-white/50">Adjust how details Gemini interprets your voice pitch.</p>
+                      <p className="text-sm text-white/50">Adjust how VoiceCV interprets your voice pitch.</p>
                     </div>
                     <Zap size={24} className="text-voice-amber animate-pulse" />
                   </div>
@@ -105,7 +115,7 @@ export default function SettingsPage() {
                     Target Industry Bias
                   </h3>
                   <div className="space-y-4">
-                    <p className="text-sm text-white/50">Gemini will prioritize keywords and skills relevant to these areas.</p>
+                    <p className="text-sm text-white/50">VoiceCV will prioritize keywords and skills relevant to these areas.</p>
                     <div className="flex flex-wrap gap-2">
                       {['SaaS', 'Fintech', 'AI/ML', 'Web3', 'HealthTech', 'E-commerce'].map(tag => (
                         <button key={tag} className="px-4 py-2.5 min-h-[44px] rounded-full border border-white/10 text-[10px] font-black uppercase tracking-widest hover:border-brand-violet transition-colors">
@@ -137,6 +147,29 @@ export default function SettingsPage() {
                     </div>
                   </Card>
                 ))}
+              </motion.div>
+            )}
+
+            {activeSection === 'account' && (
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                <Card variant="glass" className="space-y-6 p-8">
+                  <div><p className="text-xs font-black uppercase tracking-[0.24em] text-[var(--accent)]">Signed-in account</p><h2 className="mt-2 font-display text-2xl font-bold text-[var(--text)]">Account Details</h2></div>
+                  <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5"><p className="text-xs font-bold uppercase tracking-widest text-[var(--muted)]">Email address</p><p className="mt-2 text-lg font-semibold text-[var(--text)]">{user?.email || 'No email available'}</p></div>
+                  <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5"><p className="text-xs font-bold uppercase tracking-widest text-[var(--muted)]">Account status</p><p className="mt-2 text-lg font-semibold text-[var(--text)]">{user?.email_confirmed_at ? 'Email verified' : 'Email verification pending'}</p></div>
+                  <Button variant="ghost" onClick={() => void signOut()}>Sign out</Button>
+                </Card>
+              </motion.div>
+            )}
+
+            {activeSection === 'security' && (
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                <Card variant="glass" className="space-y-6 p-8">
+                  <div><p className="text-xs font-black uppercase tracking-[0.24em] text-[var(--accent)]">Security & Privacy</p><h2 className="mt-2 font-display text-2xl font-bold text-[var(--text)]">Keep your career data protected</h2></div>
+                  <div className="grid gap-4 sm:grid-cols-2"><div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5"><Shield size={20} className="text-[var(--accent)]" /><h3 className="mt-3 font-display font-bold text-[var(--text)]">Email verification</h3><p className="mt-2 text-sm text-[var(--muted)]">{user?.email_confirmed_at ? 'Your email address is verified.' : 'Verify your email to secure account recovery.'}</p></div><div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5"><User size={20} className="text-[var(--accent)]" /><h3 className="mt-3 font-display font-bold text-[var(--text)]">Private account</h3><p className="mt-2 text-sm text-[var(--muted)]">Your account is private. Profile sharing is not enabled.</p></div></div>
+                  <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5"><h3 className="font-display font-bold text-[var(--text)]">Password and sessions</h3><p className="mt-2 text-sm leading-6 text-[var(--muted)]">Use a unique password. Resetting your password sends a secure recovery link to your verified email.</p><Button className="mt-4" variant="secondary" onClick={() => void sendPasswordReset()}>Send password reset email</Button></div>
+                  <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5"><h3 className="font-display font-bold text-[var(--text)]">Your data</h3><p className="mt-2 text-sm leading-6 text-[var(--muted)]">VoiceCV currently keeps generated work in the active browser session. Cloud profile and document storage will become available once the database migration is applied.</p></div>
+                  {securityMessage && <p role="status" className="rounded-xl bg-[var(--accent-soft)] p-3 text-sm text-[var(--text)]">{securityMessage}</p>}
+                </Card>
               </motion.div>
             )}
 

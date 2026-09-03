@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { Palette, Check, Sparkles, Layout, Grid, Layers, Eye } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { GlassPanel } from '../components/ui/GlassPanel';
+import { useAuth } from '../auth/AuthProvider';
+import { saveThemePreference } from '../lib/careerData';
 
 const THEMES = [
   {
@@ -42,7 +44,9 @@ const THEMES = [
 ];
 
 export default function ThemesPage() {
-  const currentThemeId = 'voyager'; // Fallback to current
+  const [currentThemeId, setCurrentThemeId] = useState(() => window.localStorage.getItem('voicecv-resume-theme') || 'voyager');
+  const { user } = useAuth();
+  useEffect(() => { window.localStorage.setItem('voicecv-resume-theme', currentThemeId); document.documentElement.dataset.resumeTheme = currentThemeId; if (user) void saveThemePreference(user.id, currentThemeId); }, [currentThemeId, user]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16 lg:py-20">
@@ -119,6 +123,7 @@ export default function ThemesPage() {
                       variant={currentThemeId === theme.id ? 'secondary' : 'primary'}
                       className="flex-1"
                       disabled={currentThemeId === theme.id}
+                      onClick={() => setCurrentThemeId(theme.id)}
                     >
                       {currentThemeId === theme.id ? (
                         <span className="flex items-center gap-2"><Check size={16} /> Current</span>
@@ -145,7 +150,7 @@ export default function ThemesPage() {
         <Layers size={40} className="text-brand-violet mx-auto mb-6" />
         <h2 className="text-2xl sm:text-3xl font-display font-bold mb-4">Can't find the perfect style?</h2>
         <p className="text-white/40 max-w-xl mx-auto mb-8 text-sm sm:text-base">
-          Our AI engine is constantly learning new professional aesthetics. Request a custom theme and Gemini will generate a unique visual language just for your profile.
+          Our AI engine is constantly learning new professional aesthetics. Request a custom theme and VoiceCV will generate a unique visual language just for your profile.
         </p>
         <Button variant="secondary" className="px-8 sm:px-12 h-12 sm:h-14 rounded-2xl">
            Request Custom Theme

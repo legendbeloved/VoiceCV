@@ -57,7 +57,7 @@ export default function ImportPage({ onToast }: { onToast: (msg: string, v: 'suc
       onToast('Profile parsed successfully.', 'success');
     } catch (error) {
       const msg = error instanceof Error && error.message.includes('API key')
-        ? 'Gemini API key is missing. Add GEMINI_API_KEY to your .env.local file and restart the dev server.'
+        ? 'VoiceCV AI configuration is missing. Add GEMINI_API_KEY to your .env.local file and restart the dev server.'
         : 'Failed to parse profile. Please try again.';
       onToast(msg, 'error');
     } finally {

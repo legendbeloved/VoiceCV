@@ -30,9 +30,9 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
 }, ref) => {
   const variants = {
     primary: "bg-[var(--accent)] text-[var(--on-accent)] shadow-[0_16px_40px_rgba(46,92,255,0.22)] hover:shadow-[0_20px_54px_rgba(46,92,255,0.32)]",
-    secondary: "bg-[var(--panel)] border border-[var(--border)] text-[var(--text)]",
-    ghost: "bg-transparent border border-[var(--border)] text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--surface)]",
-    icon: "bg-[var(--panel)] border border-[var(--border)] p-0 justify-center items-center rounded-2xl text-[var(--text)]",
+    secondary: "bg-[var(--panel)] border border-[var(--border)] text-[var(--text)] shadow-sm hover:bg-[var(--surface)] hover:border-[var(--accent)]/50",
+    ghost: "bg-transparent border border-[var(--border)] text-[var(--text)] hover:bg-[var(--surface)] hover:border-[var(--accent)]/50",
+    icon: "bg-[var(--panel)] border border-[var(--border)] p-0 justify-center items-center rounded-2xl text-[var(--text)] shadow-sm hover:bg-[var(--surface)] hover:border-[var(--accent)]/50",
     destructive: "bg-destructive text-white shadow-[0_0_20px_rgba(239,68,68,0.3)]",
     outline: "bg-transparent border-2 border-[var(--accent)] text-[var(--accent)] hover:bg-[var(--accent-soft)]",
     loading: "opacity-80 pointer-events-none"

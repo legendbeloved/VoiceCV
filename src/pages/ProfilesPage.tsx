@@ -6,6 +6,8 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../auth/AuthProvider';
+import { saveCareerProfile } from '../lib/careerData';
 
 const toneLabels = { professional: 'Professional', warm: 'Warm', executive: 'Executive', confident: 'Confident', creative: 'Creative' };
 const templateLabels = { ats: 'Classic ATS', modern: 'Modern Compact', executive: 'Executive', creative: 'Creative' };
@@ -13,6 +15,7 @@ const templateLabels = { ats: 'Classic ATS', modern: 'Modern Compact', executive
 export default function ProfilesPage({ onToast }: { onToast: (msg: string, v: 'success' | 'error' | 'info') => void }) {
   const { profiles, activeProfileId, createProfile, switchProfile, deleteProfile, updateProfile, assets } = useVoiceCVStore();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
   const [newRole, setNewRole] = useState('');
@@ -20,24 +23,26 @@ export default function ProfilesPage({ onToast }: { onToast: (msg: string, v: 's
   const [editName, setEditName] = useState('');
   const [editRole, setEditRole] = useState('');
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!newName.trim() || !newRole.trim()) {
       onToast('Please enter a name and role.', 'error');
       return;
     }
     createProfile(newName.trim(), newRole.trim());
+    if (user) await saveCareerProfile({ userId: user.id, name: newName.trim(), role: newRole.trim(), tone: useVoiceCVStore.getState().tone, resumeTemplate: useVoiceCVStore.getState().resumeTemplate, assets: useVoiceCVStore.getState().assets });
     setNewName('');
     setNewRole('');
     setShowCreate(false);
     onToast('Profile created.', 'success');
   };
 
-  const handleSaveFromCurrent = () => {
+  const handleSaveFromCurrent = async () => {
     if (!assets) {
       onToast('No active documents to save. Record a session first.', 'error');
       return;
     }
     const id = createProfile(assets.name || 'My Profile', assets.role);
+    if (user) await saveCareerProfile({ userId: user.id, name: assets.name || 'My Profile', role: assets.role, tone: useVoiceCVStore.getState().tone, resumeTemplate: useVoiceCVStore.getState().resumeTemplate, assets });
     onToast('Current session saved as a new profile.', 'success');
   };
 

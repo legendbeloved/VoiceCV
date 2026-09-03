@@ -113,16 +113,16 @@ html.theme-dark,
 .theme-dark {
   --bg: #101522;
   --text: #F8FAFC;
-  --muted: #A8B3C7;
-  --panel: rgba(255, 255, 255, 0.07);
-  --surface: rgba(255, 255, 255, 0.045);
-  --border: rgba(255, 255, 255, 0.12);
-  --accent: #6EA7FF;
-  --accent-soft: rgba(110, 167, 255, 0.16);
+  --muted: #C1CCDC;
+  --panel: rgba(24, 34, 53, 0.92);
+  --surface: rgba(35, 48, 72, 0.82);
+  --border: rgba(190, 210, 240, 0.22);
+  --accent: #8AB7FF;
+  --accent-soft: rgba(138, 183, 255, 0.22);
   --on-accent: #07111F;
-  --warm: #F2A541;
-  --warm-soft: rgba(242, 165, 65, 0.16);
-  --success: #10B981;
+  --warm: #FFC365;
+  --warm-soft: rgba(255, 195, 101, 0.2);
+  --success: #47D7A1;
   --hero: linear-gradient(135deg, #121A2B 0%, #172032 55%, #0F172A 100%);
   --shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
 }
@@ -131,18 +131,42 @@ html.theme-light,
 .theme-light {
   --bg: #F7F3EA;
   --text: #172033;
-  --muted: #687386;
-  --panel: rgba(255, 255, 255, 0.74);
-  --surface: rgba(255, 255, 255, 0.52);
-  --border: rgba(23, 32, 51, 0.13);
-  --accent: #2857D8;
-  --accent-soft: rgba(40, 87, 216, 0.12);
+  --muted: #4C5A70;
+  --panel: rgba(255, 255, 255, 0.94);
+  --surface: rgba(255, 255, 255, 0.78);
+  --border: rgba(23, 32, 51, 0.2);
+  --accent: #1E4FC7;
+  --accent-soft: rgba(30, 79, 199, 0.16);
   --on-accent: #FFFFFF;
   --warm: #C66A13;
   --warm-soft: rgba(198, 106, 19, 0.12);
   --success: #047857;
   --hero: linear-gradient(135deg, #FFFDF8 0%, #ECF4FF 58%, #F8EBD8 100%);
   --shadow: 0 24px 70px rgba(59, 74, 112, 0.14);
+}
+
+/* Legacy dark-surface utilities used by Settings, Themes, Vault, and tours. */
+.theme-light .text-white\/20,
+.theme-light .text-white\/30,
+.theme-light .text-white\/40,
+.theme-light .text-white\/50,
+.theme-light .text-white\/60 {
+  color: var(--muted) !important;
+  opacity: 1;
+}
+
+.theme-light .bg-white\/5,
+.theme-light .bg-white\/\[0\.02\] {
+  background-color: var(--surface) !important;
+}
+
+.theme-light .border-white\/5,
+.theme-light .border-white\/10 {
+  border-color: var(--border) !important;
+}
+
+.theme-light .bg-void-indigo\/40 {
+  background-color: var(--panel) !important;
 }
 
 body {
@@ -161,9 +185,47 @@ h1, h2, h3, h4, .font-display {
 
 .app-shell {
   background:
-    linear-gradient(180deg, var(--bg), var(--bg)),
-    radial-gradient(circle at top left, var(--accent-soft), transparent 34%);
+    radial-gradient(circle at top left, var(--accent-soft), transparent 34%),
+    var(--bg);
   color: var(--text);
+}
+
+/* Shared contrast rules keep controls readable on every page and theme. */
+::selection {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: color-mix(in srgb, var(--muted) 88%, transparent);
+  opacity: 1;
+}
+
+@media (prefers-contrast: more) {
+  html.theme-dark,
+  .theme-dark {
+    --muted: #E2E8F0;
+    --panel: #182235;
+    --surface: #233048;
+    --border: rgba(226, 232, 240, 0.45);
+  }
+
+  html.theme-light,
+  .theme-light {
+    --muted: #334155;
+    --panel: #FFFFFF;
+    --surface: #FFFFFF;
+    --border: rgba(23, 32, 51, 0.38);
+  }
 }
 
 /* ========== RESPONSIVE TYPOGRAPHY ========== */

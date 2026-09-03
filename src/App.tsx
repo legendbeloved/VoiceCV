@@ -23,6 +23,10 @@ import PortfolioPage from './pages/PortfolioPage';
 import VaultPage from './pages/VaultPage';
 import SettingsPage from './pages/SettingsPage';
 import { InterviewSimulatorPage } from './pages/InterviewSimulatorPage';
+import { LoginPage } from './pages/LoginPage';
+import { RequireAuth } from './auth/RequireAuth';
+import { useAuth } from './auth/AuthProvider';
+import { saveGeneratedCareerSession } from './lib/careerData';
 
 export type ThemeMode = 'light' | 'dark';
 
@@ -35,6 +39,7 @@ export default function App() {
     return window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
   });
   const { setAssets, setProcessingStep, setTranscript, reset } = useVoiceCVStore();
+  const { user } = useAuth();
 
   useEffect(() => {
     window.localStorage.setItem('voicecv-theme', theme);
@@ -98,6 +103,9 @@ export default function App() {
       setProcessingStep('complete');
       setTranscript(result.transcript);
       setAssets(result);
+      if (user) {
+        void saveGeneratedCareerSession({ userId: user.id, name: result.name || 'My Profile', role: result.role || 'Professional', tone: payload.tone, resumeTemplate: payload.resumeTemplate, jobDescription: payload.jobDescription, transcript: result.transcript, visualTheme: window.localStorage.getItem('voicecv-resume-theme') || 'voyager', assets: result }).catch((saveError) => console.error('Unable to save VoiceCV data:', saveError));
+      }
       
       setTimeout(() => {
         navigate('/results');
@@ -108,7 +116,7 @@ export default function App() {
       const message = isParsingError 
         ? 'AI returned malformed data. Please try again.' 
         : error instanceof Error && error.message.includes('API key')
-          ? 'Gemini API key is missing. Add GEMINI_API_KEY to .env.local and restart the dev server.'
+          ? 'VoiceCV AI configuration is missing. Add GEMINI_API_KEY to .env.local and restart the dev server.'
           : 'AI processing failed. Please check your connection or try again.';
       addToast(message, 'error');
       navigate('/record');
@@ -132,19 +140,20 @@ export default function App() {
           <ErrorBoundary>
             <Routes>
               <Route path="/" element={<LandingPage onStart={() => navigate('/record')} />} />
+              <Route path="/login" element={<LoginPage />} />
               <Route path="/record" element={<RecordPage onSubmit={handleSubmitTranscription} />} />
               <Route path="/processing" element={<ProcessingPage />} />
               <Route path="/results" element={<ResultsPage onReset={handleReset} onToast={addToast} />} />
-              <Route path="/profiles" element={<ProfilesPage onToast={addToast} />} />
+              <Route path="/profiles" element={<RequireAuth><ProfilesPage onToast={addToast} /></RequireAuth>} />
               <Route path="/ats-optimizer" element={<ATSOptimizerPage onToast={addToast} />} />
               <Route path="/cover-letter" element={<CoverLetterPage onToast={addToast} />} />
               <Route path="/import" element={<ImportPage onToast={addToast} />} />
               <Route path="/career-path" element={<CareerPathPage onToast={addToast} />} />
-              <Route path="/themes" element={<ThemesPage />} />
+              <Route path="/themes" element={<RequireAuth><ThemesPage /></RequireAuth>} />
               <Route path="/portfolio" element={<PortfolioPage />} />
               <Route path="/portfolio/:id" element={<PortfolioPage />} />
-              <Route path="/vault" element={<VaultPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/vault" element={<RequireAuth><VaultPage /></RequireAuth>} />
+              <Route path="/settings" element={<RequireAuth><SettingsPage /></RequireAuth>} />
               <Route path="/interview" element={<InterviewSimulatorPage onToast={addToast} />} />
               <Route path="*" element={<NotFoundPage onBack={handleReset} />} />
             </Routes>

@@ -11,7 +11,7 @@ interface LandingPageProps {
 
 const flowSteps = [
   { icon: Mic2, title: 'Record your story', copy: 'Speak naturally for up to 60 seconds about your background, skills, wins, and next role.' },
-  { icon: Wand2, title: 'Gemini extracts the signal', copy: 'Audio is transcribed, cleaned, and turned into structured career facts for the generator.' },
+  { icon: Wand2, title: 'VoiceCV extracts the signal', copy: 'Audio is transcribed, cleaned, and turned into structured career facts for the generator.' },
   { icon: ClipboardCheck, title: 'Use the documents', copy: 'Review the resume, cover letter, and LinkedIn bio, then copy or download the one you need.' },
 ];
 
@@ -38,7 +38,7 @@ export function LandingPage({ onStart }: LandingPageProps) {
               Speak once. Land the job.
             </h1>
             <p className="mt-6 max-w-2xl text-base sm:text-lg leading-7 lg:leading-8 text-[var(--muted)]">
-              VoiceCV records your pitch, asks Gemini to transcribe and extract the useful career details, then generates a resume, cover letter, and LinkedIn bio without making you stare at a blank page.
+              VoiceCV records your pitch, extracts the useful career details, then generates a resume, cover letter, and LinkedIn bio without making you stare at a blank page.
             </p>
 
             <div className="mt-8 flex flex-col sm:flex-row gap-4">

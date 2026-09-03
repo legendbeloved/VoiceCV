@@ -56,7 +56,7 @@ export function ProcessingPage() {
             </div>
           </div>
 
-          <p className="text-xs font-black uppercase tracking-[0.28em] text-[var(--accent)]">Gemini is working</p>
+          <p className="text-xs font-black uppercase tracking-[0.28em] text-[var(--accent)]">VoiceCV is working</p>
           <h1 className="mt-3 text-3xl font-display font-extrabold text-[var(--text)]">Turning voice into career documents</h1>
         </div>
 

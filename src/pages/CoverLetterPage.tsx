@@ -39,7 +39,7 @@ export default function CoverLetterPage({ onToast }: { onToast: (msg: string, v:
       onToast('Cover letter generated successfully.', 'success');
     } catch (error) {
       const msg = error instanceof Error && error.message.includes('API key')
-        ? 'Gemini API key is missing.'
+        ? 'VoiceCV AI configuration is missing.'
         : 'Generation failed. Please try again.';
       onToast(msg, 'error');
     } finally {
@@ -63,7 +63,7 @@ export default function CoverLetterPage({ onToast }: { onToast: (msg: string, v:
       <header>
         <p className="text-xs font-black uppercase tracking-[0.28em] text-[var(--accent)]">AI Cover Letter Personalization</p>
         <h1 className="mt-3 text-4xl sm:text-5xl font-display font-extrabold text-[var(--text)]">Personalized cover letters for every application</h1>
-        <p className="mt-4 text-[var(--muted)] max-w-2xl">Paste the job description and optionally add the company name. Gemini will research the context and write a tailored cover letter.</p>
+        <p className="mt-4 text-[var(--muted)] max-w-2xl">Paste the job description and optionally add the company name. VoiceCV will use the context to write a tailored cover letter.</p>
       </header>
 
       <div className="grid gap-6 lg:grid-cols-[0.5fr_1fr]">

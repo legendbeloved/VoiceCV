@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { 
   Database, Search, Filter, Trash2, 
@@ -9,6 +9,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Link } from 'react-router-dom';
+import { loadCareerProfiles } from '../lib/careerData';
 
 interface SavedCV {
   id: string;
@@ -21,13 +22,9 @@ interface SavedCV {
 export default function VaultPage() {
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Mock data for initial UI - will be replaced with Firestore real-time sync
-  const [items] = useState<SavedCV[]>([
-    { id: '1', role: 'Full Stack Engineer', date: '2024-05-01', status: 'complete', score: 98 },
-    { id: '2', role: 'Product Manager', date: '2024-04-28', status: 'complete', score: 92 },
-    { id: '3', role: 'UI/UX Designer', date: '2024-04-25', status: 'draft', score: 85 },
-    { id: '4', role: 'DevOps Architect', date: '2024-04-20', status: 'complete', score: 95 },
-  ]);
+  const [items, setItems] = useState<SavedCV[]>([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { void loadCareerProfiles().then((profiles) => setItems(profiles.map((profile: any) => ({ id: profile.id, role: profile.role, date: profile.updated_at, status: 'complete', score: profile.assets?.resumeScore?.overall || 0 })))).finally(() => setLoading(false)); }, []);
 
   const filteredItems = items.filter(item => 
     item.role.toLowerCase().includes(searchQuery.toLowerCase())
@@ -82,6 +79,8 @@ export default function VaultPage() {
             </div>
           </Link>
         </motion.div>
+
+        {!loading && filteredItems.length === 0 && <div className="md:col-span-2 lg:col-span-3 rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-8 text-center text-[var(--muted)]">No saved career profiles yet. Generate a document while signed in to add it here.</div>}
 
         {filteredItems.map((item, index) => (
           <motion.div

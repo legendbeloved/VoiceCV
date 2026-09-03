@@ -90,7 +90,7 @@ export function RecordPage({ onSubmit }: RecordPageProps) {
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      setSpeechNotice('Live transcript is not supported in this browser. Gemini will still process your recorded audio after you submit.');
+      setSpeechNotice('Live transcript is not supported in this browser. VoiceCV will still process your recorded audio after you submit.');
       return;
     }
 
@@ -113,7 +113,7 @@ export function RecordPage({ onSubmit }: RecordPageProps) {
       setReviewedTranscript(nextTranscript);
     };
     recognition.onerror = () => {
-      setSpeechNotice('Live transcript paused. Your audio recording is still saved for Gemini processing.');
+      setSpeechNotice('Live transcript paused. Your audio recording is still saved for VoiceCV processing.');
     };
     recognitionRef.current = recognition;
 
@@ -195,7 +195,7 @@ export function RecordPage({ onSubmit }: RecordPageProps) {
       <section className="space-y-6">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.28em] text-[var(--accent)]">Setup</p>
-          <h1 className="mt-3 text-4xl sm:text-5xl font-display font-extrabold text-[var(--text)]">Give Gemini the right context before it writes.</h1>
+          <h1 className="mt-3 text-4xl sm:text-5xl font-display font-extrabold text-[var(--text)]">Give VoiceCV the right context before it writes.</h1>
           <p className="mt-5 leading-8 text-[var(--muted)]">
             Record your voice or type your story, paste a job description, then review the transcript before generating.
           </p>
@@ -370,7 +370,7 @@ export function RecordPage({ onSubmit }: RecordPageProps) {
               id="transcript-review"
               value={reviewedTranscript}
               onChange={(event) => setReviewedTranscript(event.target.value)}
-              placeholder={inputMode === 'manual' ? 'Example: My name is Amina. I am a customer support specialist with three years of SaaS experience...' : 'Review or correct the live transcript here. If it is blank, Gemini can still transcribe the audio directly.'}
+              placeholder={inputMode === 'manual' ? 'Example: My name is Amina. I am a customer support specialist with three years of SaaS experience...' : 'Review or correct the live transcript here. If it is blank, VoiceCV can still transcribe the audio directly.'}
               className="min-h-48 w-full resize-y rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5 text-sm leading-7 text-[var(--text)] outline-none transition-all placeholder:text-[var(--muted)] focus:border-[var(--accent)] focus:ring-4 focus:ring-[var(--accent-soft)]"
             />
           </div>

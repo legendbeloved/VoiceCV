@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Download, ChevronUp, FileText, FileType, FilePenLine } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { motion, AnimatePresence } from 'motion/react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   generateResumePDF,
   generateCoverLetterPDF,
@@ -11,6 +12,7 @@ import {
 } from '../../lib/pdf';
 import { generateCareerDocx } from '../../lib/docx';
 import type { CareerAssets } from '../../lib/gemini';
+import { useAuth } from '../../auth/AuthProvider';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -43,6 +45,9 @@ export function DownloadButton({ documentType, content, candidateName, assets }:
   const [isOpen, setIsOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
 
   // Close dropdown on outside click
   const handleClickOutside = useCallback((e: MouseEvent) => {
@@ -70,6 +75,11 @@ export function DownloadButton({ documentType, content, candidateName, assets }:
   }, [isOpen]);
 
   const handleDownload = async (format: 'pdf' | 'docx' | 'txt') => {
+    if (!user) {
+      setIsOpen(false);
+      navigate('/login', { state: { from: location } });
+      return;
+    }
     setIsGenerating(true);
     setIsOpen(false);
 

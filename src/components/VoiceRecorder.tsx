@@ -145,7 +145,7 @@ export default function VoiceRecorder({ onTranscriptionComplete, isProcessing }:
               className="flex items-center gap-2 text-voice-amber font-medium"
             >
               <Loader2 size={18} className="animate-spin" />
-              Gemini is crafting your brand...
+              VoiceCV is crafting your brand...
             </motion.div>
           )}
 

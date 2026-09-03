@@ -36,7 +36,7 @@ const TOUR_STEPS: TourStep[] = [
   },
   {
     title: "AI-Powered Documents",
-    description: "Gemini transcribes your voice, extracts career facts, and generates a resume, cover letter, and LinkedIn bio automatically. Edit, rewrite, and download all documents.",
+    description: "VoiceCV transcribes your voice, extracts career facts, and generates a resume, cover letter, and LinkedIn bio automatically. Edit, rewrite, and download all documents.",
     tip: "Paste a job description before generating for ATS keyword optimization.",
     icon: <FileText size={40} />,
     color: "from-brand-violet to-emerald-500",
@@ -107,7 +107,7 @@ export function OnboardingTour() {
   return (
     <AnimatePresence>
       {isVisible && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-void-indigo/80 backdrop-blur-md">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-void-indigo/85 backdrop-blur-md" role="dialog" aria-modal="true" aria-labelledby="tour-title">
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -115,7 +115,7 @@ export function OnboardingTour() {
             className="w-full max-w-xl"
           >
             <GlassPanel className="p-0 overflow-hidden border-white/10 shadow-[0_32px_128px_-16px_rgba(124,58,237,0.3)]">
-              <div className={`h-48 sm:h-64 bg-gradient-to-br ${step.color} flex items-center justify-center relative`}>
+              <div className={`h-44 sm:h-56 bg-gradient-to-br ${step.color} flex items-center justify-center relative`}>
                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20" />
                 <motion.div
                   key={currentStep}
@@ -129,7 +129,8 @@ export function OnboardingTour() {
                 
                 <button 
                   onClick={handleSkip}
-                  className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white/60 hover:text-white transition-colors"
+                  aria-label="Close onboarding tour"
+                  className="absolute top-4 right-4 p-2 rounded-full bg-white/15 hover:bg-white/25 text-white transition-colors"
                 >
                   <X size={20} />
                 </button>
@@ -137,15 +138,17 @@ export function OnboardingTour() {
                 <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-white/10 text-white/80 text-xs font-bold">
                   {currentStep + 1} / {TOUR_STEPS.length}
                 </div>
+                <div className="absolute bottom-0 left-0 h-1.5 bg-white/25 w-full"><div className="h-full bg-white transition-all duration-500" style={{ width: `${((currentStep + 1) / TOUR_STEPS.length) * 100}%` }} /></div>
               </div>
 
-              <div className="p-6 sm:p-8 text-center space-y-4">
+              <div className="p-6 sm:p-8 text-center space-y-5">
                 <div className="space-y-2">
                   <motion.h2 
                     key={`title-${currentStep}`}
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="text-2xl sm:text-3xl font-display font-black tracking-tight uppercase"
+                    id="tour-title"
+                    className="text-2xl sm:text-3xl font-display font-black tracking-tight text-[var(--text)]"
                   >
                     {step.title}
                   </motion.h2>
@@ -153,7 +156,7 @@ export function OnboardingTour() {
                     key={`desc-${currentStep}`}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="text-white/50 leading-relaxed max-w-md mx-auto text-sm sm:text-base"
+                    className="text-[var(--muted)] leading-relaxed max-w-md mx-auto text-sm sm:text-base"
                   >
                     {step.description}
                   </motion.p>
@@ -164,10 +167,10 @@ export function OnboardingTour() {
                     key={`tip-${currentStep}`}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="flex items-start gap-2 p-3 rounded-xl bg-white/5 border border-white/5 text-left"
+                    className="flex items-start gap-2 p-4 rounded-2xl bg-[var(--surface)] border border-[var(--border)] text-left"
                   >
                     <Lightbulb size={16} className="text-voice-amber shrink-0 mt-0.5" />
-                    <p className="text-xs text-white/40 leading-relaxed">{step.tip}</p>
+                    <p className="text-xs text-[var(--muted)] leading-relaxed">{step.tip}</p>
                   </motion.div>
                 )}
 
@@ -176,6 +179,7 @@ export function OnboardingTour() {
                     <button
                       key={i}
                       onClick={() => setCurrentStep(i)}
+                      aria-label={`Go to step ${i + 1}: ${TOUR_STEPS[i].title}`}
                       className={`h-1 rounded-full transition-all duration-500 cursor-pointer ${
                         i === currentStep ? 'w-8 bg-brand-violet' : i < currentStep ? 'w-3 bg-brand-violet/50' : 'w-2 bg-white/10'
                       }`}
@@ -215,7 +219,7 @@ export function OnboardingTour() {
               <div className="p-4 bg-white/[0.02] border-t border-white/5 flex items-center justify-center gap-2">
                 <Sparkles size={12} className="text-voice-amber" />
                 <span className="text-[9px] font-black uppercase tracking-[0.3em] text-white/20">
-                  Powered by Gemini 3 Flash
+                  Powered by VoiceCV
                 </span>
               </div>
             </GlassPanel>

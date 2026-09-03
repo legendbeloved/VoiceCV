@@ -25,7 +25,7 @@ export default function ATSOptimizerPage({ onToast }: { onToast: (msg: string, v
       onToast('ATS analysis complete.', 'success');
     } catch (error) {
       const msg = error instanceof Error && error.message.includes('API key')
-        ? 'Gemini API key is missing.'
+        ? 'VoiceCV AI configuration is missing.'
         : 'Analysis failed. Please try again.';
       onToast(msg, 'error');
     } finally {

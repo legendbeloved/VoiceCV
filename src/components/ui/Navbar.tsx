@@ -27,6 +27,15 @@ export function Navbar({ onLogoClick, theme, onThemeToggle }: NavbarProps) {
     { label: 'Settings', href: '/settings', icon: Settings, active: location.pathname === '/settings' },
   ];
 
+  const desktopLinks = [
+    { label: 'Record', href: '/record' },
+    { label: 'Profiles', href: '/profiles' },
+    { label: 'ATS', href: '/ats-optimizer' },
+    { label: 'Cover letter', href: '/cover-letter' },
+    { label: 'Import', href: '/import' },
+    { label: 'Career path', href: '/career-path' },
+  ];
+
   const handleLogoClick = () => {
     setIsMenuOpen(false);
     onLogoClick();
@@ -59,13 +68,20 @@ export function Navbar({ onLogoClick, theme, onThemeToggle }: NavbarProps) {
         </div>
       </button>
 
-      <nav className="hidden lg:flex items-center gap-6">
-        <Link to="/record" className="text-[10px] font-black uppercase tracking-[0.25em] text-[var(--muted)] hover:text-[var(--text)] transition-all duration-300">Record</Link>
-        <Link to="/profiles" className="text-[10px] font-black uppercase tracking-[0.25em] text-[var(--muted)] hover:text-[var(--text)] transition-all duration-300">Profiles</Link>
-        <Link to="/ats-optimizer" className="text-[10px] font-black uppercase tracking-[0.25em] text-[var(--muted)] hover:text-[var(--text)] transition-all duration-300">ATS</Link>
-        <Link to="/cover-letter" className="text-[10px] font-black uppercase tracking-[0.25em] text-[var(--muted)] hover:text-[var(--text)] transition-all duration-300">Cover Letter</Link>
-        <Link to="/import" className="text-[10px] font-black uppercase tracking-[0.25em] text-[var(--muted)] hover:text-[var(--text)] transition-all duration-300">Import</Link>
-        <Link to="/career-path" className="text-[10px] font-black uppercase tracking-[0.25em] text-[var(--muted)] hover:text-[var(--text)] transition-all duration-300">Career Path</Link>
+      <nav className="hidden lg:flex items-center gap-1 xl:gap-2" aria-label="Primary navigation">
+        {desktopLinks.map((item) => {
+          const isActive = location.pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              to={item.href}
+              aria-current={isActive ? 'page' : undefined}
+              className={`rounded-lg px-2.5 py-2 text-[10px] font-black uppercase tracking-[0.16em] transition-all duration-200 xl:px-3 xl:tracking-[0.2em] ${isActive ? 'bg-[var(--accent-soft)] text-[var(--text)] shadow-sm ring-1 ring-[var(--accent)]/45' : 'text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--text)]'}`}
+            >
+              {item.label}
+            </Link>
+          );
+        })}
       </nav>
 
       <div className="flex items-center gap-4">
