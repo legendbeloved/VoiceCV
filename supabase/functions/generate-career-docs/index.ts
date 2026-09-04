@@ -144,9 +144,10 @@ ${jsonContract}
 });
 
 // POST: Refine a specific document
+// POST: Refine a specific document
 app.post("/refine", async (c: Context) => {
   try {
-    const body = await c.req.body.json();
+    const body = await c.req.json();
     const { documentType, content, action, tone }: { documentType: string; content: string; action: string; tone?: string } = body;
 
     if (!content?.trim()) {

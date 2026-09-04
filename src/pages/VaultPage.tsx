@@ -9,6 +9,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../auth/AuthProvider';
 import { loadCareerProfiles } from '../lib/careerData';
 
 interface SavedCV {
@@ -24,7 +25,10 @@ export default function VaultPage() {
   
   const [items, setItems] = useState<SavedCV[]>([]);
   const [loading, setLoading] = useState(true);
-  useEffect(() => { void loadCareerProfiles().then((profiles) => setItems(profiles.map((profile: any) => ({ id: profile.id, role: profile.role, date: profile.updated_at, status: 'complete', score: profile.assets?.resumeScore?.overall || 0 })))).finally(() => setLoading(false)); }, []);
+  useEffect(() => {
+    const { user } = useAuth();
+    void loadCareerProfiles(user?.id || '').then((profiles) => setItems(profiles.map((profile: any) => ({ id: profile.id, role: profile.role, date: profile.updated_at, status: 'complete', score: profile.assets?.resumeScore?.overall || 0 })))).finally(() => setLoading(false));
+  }, []);
 
   const filteredItems = items.filter(item => 
     item.role.toLowerCase().includes(searchQuery.toLowerCase())

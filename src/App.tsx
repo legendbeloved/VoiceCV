@@ -10,7 +10,8 @@ import { ProcessingPage } from './pages/ProcessingPage';
 import { ResultsPage } from './pages/ResultsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
-import { useVoiceCVStore, ProcessingStep } from './store/useVoiceCVStore';
+import { useVoiceCVStore } from './store/useVoiceCVStore';
+import { ProcessingStep } from './store/useVoiceCVStore';
 import { processVoiceToDocuments, ResumeTemplate, ToneStyle } from './lib/gemini';
 import { supabase } from './lib/supabase';
 import { OnboardingTour } from './components/ui/OnboardingTour';
@@ -33,9 +34,14 @@ export type ThemeMode = 'light' | 'dark';
 
 export default function App() {
   const navigate = useNavigate();
-  const [toasts, setToasts] = useState<any[]>([]);
   const { user } = useAuth();
-
+  const store = useVoiceCVStore();
+  const setProcessingStep = store.setProcessingStep;
+  const setTranscript = store.setTranscript;
+  const setAssets = store.setAssets;
+  const reset = store.reset;
+  const { setAssets: setStoreAssets, setProcessingStep: setStoreProcessingStep, setTranscript: setStoreTranscript } = store;
+  const [toasts, setToasts] = useState<any[]>([]);
   const [theme, setTheme] = useState<ThemeMode>(() => {
     // Read theme from Supabase user_profiles first, fallback to prefers-color-scheme
     if (user?.id) {
@@ -89,7 +95,9 @@ export default function App() {
         user_id: user.id,
         preferred_theme: theme,
         updated_at: new Date().toISOString(),
-      }).catch((err) => console.error('Failed to save theme to Supabase:', err));
+      }).then(() => {
+        // upsert successful
+      });
     }
 
     // Apply theme classes to HTML element
@@ -100,9 +108,6 @@ export default function App() {
       theme === 'dark' ? '#101522' : '#F7F3EA',
     );
   }, [theme, user?.id, supabase]);
-    reset();
-    navigate('/');
-  };
 
   const addToast = (message: string, variant: 'success' | 'error' | 'info' = 'info') => {
     const id = Math.random().toString(36).substr(2, 9);
@@ -114,6 +119,11 @@ export default function App() {
 
   const removeToast = (id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  const handleReset = () => {
+    reset();
+    navigate('/');
   };
 
   const handleSubmitTranscription = async (payload: {
@@ -138,7 +148,7 @@ export default function App() {
     }, 2000);
 
     try {
-      const { jobRole } = useVoiceCVStore.getState();
+      const jobRole = store.jobRole;
       const result = await processVoiceToDocuments({
         audioBlob: payload.audioBlob,
         transcriptHint: payload.transcriptHint,
