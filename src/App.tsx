@@ -12,6 +12,7 @@ import { NotFoundPage } from './pages/NotFoundPage';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { useVoiceCVStore, ProcessingStep } from './store/useVoiceCVStore';
 import { processVoiceToDocuments, ResumeTemplate, ToneStyle } from './lib/gemini';
+import { supabase } from './lib/supabase';
 import { OnboardingTour } from './components/ui/OnboardingTour';
 import ATSOptimizerPage from './pages/ATSOptimizerPage';
 import CoverLetterPage from './pages/CoverLetterPage';
@@ -33,25 +34,72 @@ export type ThemeMode = 'light' | 'dark';
 export default function App() {
   const navigate = useNavigate();
   const [toasts, setToasts] = useState<any[]>([]);
-  const [theme, setTheme] = useState<ThemeMode>(() => {
-    const savedTheme = window.localStorage.getItem('voicecv-theme');
-    if (savedTheme === 'light' || savedTheme === 'dark') return savedTheme;
-    return window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-  });
-  const { setAssets, setProcessingStep, setTranscript, reset } = useVoiceCVStore();
   const { user } = useAuth();
 
+  const [theme, setTheme] = useState<ThemeMode>(() => {
+    // Read theme from Supabase user_profiles first, fallback to prefers-color-scheme
+    if (user?.id) {
+      // Will be set after supabase initialized - use localStorage as fallback
+      const savedTheme = window.localStorage.getItem('voicecv-theme');
+      if (savedTheme === 'light' || savedTheme === 'dark') return savedTheme;
+    }
+    return window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  });
+
   useEffect(() => {
+    const setThemeFromSupabase = async () => {
+      if (!user?.id) return;
+      try {
+        if (supabase) {
+          const { data } = await supabase
+            .from('user_profiles')
+            .select('preferred_theme')
+            .eq('user_id', user.id)
+            .single();
+          if (data?.preferred_theme && ['light', 'dark'].includes(data.preferred_theme)) {
+            setTheme(data.preferred_theme as ThemeMode);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch theme from Supabase', error);
+      }
+    };
+
+    // Initialize on mount
+    setThemeFromSupabase();
+
+    // Listen for auth state changes
+    const { data: listener } = supabase?.auth?.onAuthStateChange((_event, nextSession) => {
+      if (nextSession?.user?.id) {
+        void setThemeFromSupabase();
+      }
+    });
+
+    return () => listener?.subscription?.unsubscribe();
+  }, [user?.id, supabase]);
+
+  // Save theme to Supabase and localStorage whenever it changes
+  useEffect(() => {
+    // Save to localStorage (fallback)
     window.localStorage.setItem('voicecv-theme', theme);
+
+    // Save to Supabase if user is logged in
+    if (user?.id && supabase) {
+      supabase.from('user_profiles').upsert({
+        user_id: user.id,
+        preferred_theme: theme,
+        updated_at: new Date().toISOString(),
+      }).catch((err) => console.error('Failed to save theme to Supabase:', err));
+    }
+
+    // Apply theme classes to HTML element
     document.documentElement.classList.toggle('theme-light', theme === 'light');
     document.documentElement.classList.toggle('theme-dark', theme === 'dark');
     document.querySelector('meta[name="theme-color"]')?.setAttribute(
       'content',
       theme === 'dark' ? '#101522' : '#F7F3EA',
     );
-  }, [theme]);
-
-  const handleReset = () => {
+  }, [theme, user?.id, supabase]);
     reset();
     navigate('/');
   };

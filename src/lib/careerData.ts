@@ -15,22 +15,24 @@ export async function saveCareerProfile(input: { userId: string; name: string; r
   return data;
 }
 
-export async function loadCareerProfiles() {
+export async function loadCareerProfiles(userId: string) {
   if (!supabase) return [];
-  const { data, error } = await supabase.from('career_profiles').select('*').order('updated_at', { ascending: false });
+  const { data, error } = await supabase.from('career_profiles').select('*').eq('user_id', userId).order('updated_at', { ascending: false });
   if (error) throw error;
   return data;
 }
 
-export async function updateCareerProfile(id: string, updates: Record<string, unknown>) {
+export async function updateCareerProfile(id: string, updates: Record<string, unknown>, userId: string) {
   if (!supabase) throw new Error('Supabase is not configured.');
-  const { error } = await supabase.from('career_profiles').update({ ...updates, updated_at: new Date().toISOString() }).eq('id', id);
+  // Security: only allow updating own profiles
+  const { error } = await supabase.from('career_profiles').update({ ...updates, updated_at: new Date().toISOString() }).eq('id', id).eq('user_id', userId);
   if (error) throw error;
 }
 
-export async function deleteCareerProfile(id: string) {
+export async function deleteCareerProfile(id: string, userId: string) {
   if (!supabase) throw new Error('Supabase is not configured.');
-  const { error } = await supabase.from('career_profiles').delete().eq('id', id);
+  // Security: only allow deleting own profiles
+  const { error } = await supabase.from('career_profiles').delete().eq('id', id).eq('user_id', userId);
   if (error) throw error;
 }
 
