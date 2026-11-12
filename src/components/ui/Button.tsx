@@ -44,7 +44,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
     lg: "px-8 py-4 min-h-[52px] text-base"
   };
 
-  const baseClasses = "relative inline-flex items-center justify-center font-display font-bold uppercase tracking-widest rounded-xl transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-3 focus:ring-offset-[var(--bg)] disabled:opacity-50 disabled:cursor-not-allowed";
+  const baseClasses = "relative inline-flex max-w-full items-center justify-center font-display font-bold uppercase tracking-wide sm:tracking-widest rounded-xl transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-3 focus:ring-offset-[var(--bg)] disabled:opacity-50 disabled:cursor-not-allowed";
 
   return (
     <motion.button
@@ -77,7 +77,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
             key="content"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex items-center gap-2"
+            className="flex min-w-0 items-center justify-center gap-2 whitespace-normal text-center leading-tight"
           >
             {leftIcon}
             {children}

@@ -7,9 +7,13 @@ import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { suggestCareerPath, CareerPathSuggestion } from '../lib/gemini';
 import { useNavigate } from 'react-router-dom';
+import { usePackStore } from '../store/usePackStore';
+import { usePlanStore } from '../store/usePlanStore';
 
 export default function CareerPathPage({ onToast }: { onToast: (msg: string, v: 'success' | 'error' | 'info') => void }) {
-  const { assets } = useVoiceCVStore();
+  const { assets, jobDescription } = useVoiceCVStore();
+  const savePack = usePackStore((state) => state.savePack);
+  const plan = usePlanStore((state) => state.plan);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [suggestion, setSuggestion] = useState<CareerPathSuggestion | null>(null);
@@ -72,7 +76,9 @@ export default function CareerPathPage({ onToast }: { onToast: (msg: string, v: 
           </Card>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {suggestion.suggestedRoles.map((role, i) => (
+            {suggestion.suggestedRoles.map((role, i) => {
+              const locked = plan !== 'premium' && i >= 2;
+              return (
               <motion.div
                 key={role.title}
                 initial={{ opacity: 0, y: 20 }}
@@ -80,6 +86,14 @@ export default function CareerPathPage({ onToast }: { onToast: (msg: string, v: 
                 transition={{ delay: i * 0.1 }}
               >
                 <Card variant="solid" padding="lg" className="space-y-4 h-full flex flex-col">
+                  {locked ? (
+                    <>
+                      <h3 className="font-display text-lg font-bold text-[var(--text)]">{role.title}</h3>
+                      <p className="text-sm leading-6 text-[var(--muted)]">The first two roles are free. The rest of the shortlist is Premium.</p>
+                      <Button size="sm" onClick={() => navigate('/upgrade')}>See this role</Button>
+                    </>
+                  ) : (
+                    <>
                   <div className="flex items-start justify-between">
                     <h3 className="font-display text-lg font-bold text-[var(--text)]">{role.title}</h3>
                     <Badge className={role.matchScore >= 80 ? 'bg-green-500/10 text-green-400 border-green-500/20' : role.matchScore >= 60 ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}>
@@ -112,6 +126,29 @@ export default function CareerPathPage({ onToast }: { onToast: (msg: string, v: 
                     </div>
                   )}
 
+                  <Button size="sm" onClick={() => {
+                    const saved = savePack({
+                      name: role.title,
+                      company: '',
+                      role: role.title,
+                      jobDescription: jobDescription || `Target role: ${role.title}. Skills: ${role.skillsRequired.join(', ')}`,
+                      resume: assets.resume,
+                      coverLetter: assets.coverLetter,
+                      linkedinBio: assets.linkedinBio,
+                      language: 'English',
+                      matchScore: role.matchScore,
+                      matchedKeywords: role.skillsRequired,
+                      missingKeywords: role.skillsGap,
+                      themeId: window.localStorage.getItem('voicecv-resume-theme') || 'voyager',
+                    });
+                    if (!saved.ok) {
+                      onToast('Free keeps one application. Premium keeps a shortlist of roles.', 'info');
+                      navigate('/upgrade');
+                      return;
+                    }
+                    onToast(`${role.title} saved as an application.`, 'success');
+                    navigate('/vault');
+                  }}>Save as application</Button>
                   {role.recommendedCourses.length > 0 && (
                     <div className="mt-auto">
                       <p className="text-xs font-bold uppercase tracking-widest text-[var(--muted)] mb-2 flex items-center gap-1.5">
@@ -127,9 +164,12 @@ export default function CareerPathPage({ onToast }: { onToast: (msg: string, v: 
                       </div>
                     </div>
                   )}
+                    </>
+                  )}
                 </Card>
               </motion.div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="text-center pt-8">

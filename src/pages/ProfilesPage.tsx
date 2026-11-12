@@ -1,35 +1,130 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Users, Plus, Trash2, CheckCircle2, ArrowRight, Edit3, Save, X, Briefcase } from 'lucide-react';
-import { useVoiceCVStore, UserProfile } from '../store/useVoiceCVStore';
+import React, { useEffect, useState } from 'react';
+import { Briefcase, Edit3, Plus, Save, Trash2, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useVoiceCVStore } from '../store/useVoiceCVStore';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
-import { saveCareerProfile } from '../lib/careerData';
+import { deleteCareerProfile, loadCareerProfiles, saveCareerProfile, updateCareerProfile } from '../lib/careerData';
+import type { CareerAssets, ResumeTemplate, ToneStyle } from '../lib/gemini';
+import { usePlanStore } from '../store/usePlanStore';
 
-const toneLabels = { professional: 'Professional', warm: 'Warm', executive: 'Executive', confident: 'Confident', creative: 'Creative' };
-const templateLabels = { ats: 'Classic ATS', modern: 'Modern Compact', executive: 'Executive', creative: 'Creative' };
+const toneLabels: Record<ToneStyle, string> = { professional: 'Professional', warm: 'Warm', executive: 'Executive', confident: 'Confident', creative: 'Creative' };
+const templateLabels: Record<ResumeTemplate, string> = { ats: 'Classic ATS', modern: 'Modern Compact', executive: 'Executive', creative: 'Creative' };
+
+interface ProfileCard {
+  id: string;
+  name: string;
+  role: string;
+  tone: ToneStyle;
+  resumeTemplate: ResumeTemplate;
+  createdAt: string;
+  source: 'browser' | 'account';
+  assets: CareerAssets | null;
+  transcript: string;
+  jobDescription: string;
+}
 
 export default function ProfilesPage({ onToast }: { onToast: (msg: string, v: 'success' | 'error' | 'info') => void }) {
-  const { profiles, activeProfileId, createProfile, switchProfile, deleteProfile, updateProfile, assets } = useVoiceCVStore();
+  const {
+    profiles,
+    activeProfileId,
+    assets,
+    createProfile,
+    switchProfile,
+    deleteProfile,
+    updateProfile,
+    setAssets,
+    setJobRole,
+    setJobDescription,
+    setTranscript,
+    pushVersion,
+  } = useVoiceCVStore();
   const navigate = useNavigate();
+  const plan = usePlanStore((state) => state.plan);
   const { user } = useAuth();
+  const [cloudProfiles, setCloudProfiles] = useState<ProfileCard[]>([]);
+  const [loading, setLoading] = useState(Boolean(user));
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
   const [newRole, setNewRole] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [editRole, setEditRole] = useState('');
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setCloudProfiles([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    void loadCareerProfiles(user.id)
+      .then((rows) => setCloudProfiles((rows || []).map((profile: any) => ({
+        id: profile.id,
+        name: profile.name || 'Untitled profile',
+        role: profile.role || 'Role not set',
+        tone: profile.tone || 'professional',
+        resumeTemplate: profile.resume_template || 'ats',
+        createdAt: profile.updated_at || profile.created_at || new Date().toISOString(),
+        source: 'account' as const,
+        assets: profile.assets || null,
+        transcript: profile.transcript || profile.assets?.transcript || '',
+        jobDescription: profile.job_description || '',
+      }))))
+      .catch(() => onToast('Saved profiles could not be loaded.', 'error'))
+      .finally(() => setLoading(false));
+  }, [user?.id]);
+
+  const browserProfiles: ProfileCard[] = profiles.map((profile) => ({
+    id: profile.id,
+    name: profile.name,
+    role: profile.role,
+    tone: profile.tone,
+    resumeTemplate: profile.resumeTemplate,
+    createdAt: profile.createdAt,
+    source: 'browser',
+    assets: profile.assets,
+    transcript: '',
+    jobDescription: '',
+  }));
+  const allProfiles = [...browserProfiles, ...cloudProfiles];
 
   const handleCreate = async () => {
     if (!newName.trim() || !newRole.trim()) {
-      onToast('Please enter a name and role.', 'error');
+      onToast('Enter a name and a target role.', 'error');
       return;
     }
-    createProfile(newName.trim(), newRole.trim());
-    if (user) await saveCareerProfile({ userId: user.id, name: newName.trim(), role: newRole.trim(), tone: useVoiceCVStore.getState().tone, resumeTemplate: useVoiceCVStore.getState().resumeTemplate, assets: useVoiceCVStore.getState().assets });
+    if (plan !== 'premium' && allProfiles.length >= 1) {
+      onToast('Free keeps one profile. Extra profiles are Premium.', 'info');
+      navigate('/upgrade');
+      return;
+    }
+    const state = useVoiceCVStore.getState();
+    if (user) {
+      try {
+        const saved = await saveCareerProfile({ userId: user.id, name: newName.trim(), role: newRole.trim(), tone: state.tone, resumeTemplate: state.resumeTemplate, assets: state.assets });
+        setCloudProfiles((current) => [{
+          id: saved.id,
+          name: newName.trim(),
+          role: newRole.trim(),
+          tone: state.tone,
+          resumeTemplate: state.resumeTemplate,
+          createdAt: new Date().toISOString(),
+          source: 'account',
+          assets: state.assets,
+          transcript: state.transcript,
+          jobDescription: state.jobDescription,
+        }, ...current]);
+      } catch (error) {
+        createProfile(newName.trim(), newRole.trim());
+        onToast(error instanceof Error ? error.message : 'The profile was kept in this browser only.', 'error');
+      }
+    } else {
+      createProfile(newName.trim(), newRole.trim());
+    }
     setNewName('');
     setNewRole('');
     setShowCreate(false);
@@ -38,183 +133,200 @@ export default function ProfilesPage({ onToast }: { onToast: (msg: string, v: 's
 
   const handleSaveFromCurrent = async () => {
     if (!assets) {
-      onToast('No active documents to save. Record a session first.', 'error');
+      onToast('Record or import a story before saving a profile.', 'info');
+      navigate('/record');
       return;
     }
-    const id = createProfile(assets.name || 'My Profile', assets.role);
-    if (user) await saveCareerProfile({ userId: user.id, name: assets.name || 'My Profile', role: assets.role, tone: useVoiceCVStore.getState().tone, resumeTemplate: useVoiceCVStore.getState().resumeTemplate, assets });
-    onToast('Current session saved as a new profile.', 'success');
+    if (plan !== 'premium' && allProfiles.length >= 1) {
+      onToast('Free keeps one profile. Extra profiles are Premium.', 'info');
+      navigate('/upgrade');
+      return;
+    }
+    const state = useVoiceCVStore.getState();
+    if (user) {
+      try {
+        const saved = await saveCareerProfile({ userId: user.id, name: assets.name || 'My Profile', role: assets.role, tone: state.tone, resumeTemplate: state.resumeTemplate, assets });
+        setCloudProfiles((current) => [{
+          id: saved.id,
+          name: assets.name || 'My Profile',
+          role: assets.role,
+          tone: state.tone,
+          resumeTemplate: state.resumeTemplate,
+          createdAt: new Date().toISOString(),
+          source: 'account',
+          assets,
+          transcript: state.transcript,
+          jobDescription: state.jobDescription,
+        }, ...current]);
+      } catch (error) {
+        createProfile(assets.name || 'My Profile', assets.role);
+        onToast(error instanceof Error ? error.message : 'Saved in this browser only.', 'error');
+      }
+    } else {
+      createProfile(assets.name || 'My Profile', assets.role);
+    }
+    onToast('Current documents saved as a profile.', 'success');
   };
 
-  const handleSwitch = (id: string) => {
-    switchProfile(id);
-    onToast('Profile switched.', 'success');
+  const openProfile = (profile: ProfileCard) => {
+    if (profile.source === 'browser') switchProfile(profile.id);
+    if (profile.assets) {
+      setAssets(profile.assets);
+      setJobRole(profile.role);
+      setJobDescription(profile.jobDescription);
+      setTranscript(profile.transcript || profile.assets.transcript || '');
+      pushVersion(`Opened ${profile.name}`);
+      navigate('/results');
+      return;
+    }
+    setJobRole(profile.role);
+    onToast(`${profile.name} is active. Record a story to fill its documents.`, 'info');
+    navigate('/record');
   };
 
-  const handleDelete = (id: string) => {
-    deleteProfile(id);
+  const confirmDelete = async (profile: ProfileCard) => {
+    if (profile.source === 'browser') deleteProfile(profile.id);
+    if (profile.source === 'account' && user) {
+      try {
+        await deleteCareerProfile(profile.id, user.id);
+        setCloudProfiles((current) => current.filter((item) => item.id !== profile.id));
+      } catch (error) {
+        onToast(error instanceof Error ? error.message : 'Could not delete that profile.', 'error');
+        return;
+      }
+    }
+    setPendingDelete(null);
     onToast('Profile deleted.', 'success');
   };
 
-  const startEdit = (profile: UserProfile) => {
+  const startEdit = (profile: ProfileCard) => {
     setEditingId(profile.id);
     setEditName(profile.name);
     setEditRole(profile.role);
   };
 
-  const saveEdit = () => {
-    if (editingId && editName.trim() && editRole.trim()) {
-      updateProfile(editingId, { name: editName.trim(), role: editRole.trim() });
-      onToast('Profile updated.', 'success');
+  const saveEdit = async (profile: ProfileCard) => {
+    if (!editName.trim() || !editRole.trim()) return;
+    if (profile.source === 'browser') updateProfile(profile.id, { name: editName.trim(), role: editRole.trim() });
+    if (profile.source === 'account' && user) {
+      try {
+        await updateCareerProfile(profile.id, { name: editName.trim(), role: editRole.trim() }, user.id);
+        setCloudProfiles((current) => current.map((item) => item.id === profile.id ? { ...item, name: editName.trim(), role: editRole.trim() } : item));
+      } catch (error) {
+        onToast(error instanceof Error ? error.message : 'Could not rename that profile.', 'error');
+        return;
+      }
     }
     setEditingId(null);
+    onToast('Profile updated.', 'success');
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mx-auto w-full max-w-6xl space-y-8">
-      <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+    <div className="mx-auto w-full max-w-6xl space-y-8">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.28em] text-[var(--accent)]">Multi-Profile Support</p>
-          <h1 className="mt-3 text-4xl sm:text-5xl font-display font-extrabold text-[var(--text)]">Your Profiles</h1>
-          <p className="mt-4 text-[var(--muted)] max-w-2xl">Save multiple profiles for different roles. Switch between them quickly with different tone and template preferences.</p>
+          <h1 className="font-display text-4xl font-extrabold text-[var(--text)] sm:text-5xl">Profiles</h1>
+          <p className="mt-3 max-w-2xl text-[var(--muted)]">Keep a profile for each role you are aiming at. Opening one loads its documents, or sends you to record if it is still empty.</p>
         </div>
-        <div className="flex gap-3">
-          {assets && (
-            <Button variant="secondary" onClick={handleSaveFromCurrent} leftIcon={<Save size={16} />}>
-              Save Current Session
-            </Button>
-          )}
-          <Button onClick={() => setShowCreate(true)} leftIcon={<Plus size={16} />}>
-            New Profile
-          </Button>
+        <div className="flex flex-wrap gap-3">
+          <Button variant="secondary" onClick={() => void handleSaveFromCurrent()} leftIcon={<Save size={16} />}>Save current documents</Button>
+          <Button onClick={() => setShowCreate(true)} leftIcon={<Plus size={16} />}>New profile</Button>
         </div>
       </header>
 
-      <AnimatePresence>
-        {showCreate && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
-            <Card variant="solid" padding="lg" className="space-y-5">
-              <div className="flex items-center justify-between">
-                <h2 className="font-display text-xl font-bold text-[var(--text)]">Create New Profile</h2>
-                <Button variant="ghost" size="sm" onClick={() => setShowCreate(false)}><X size={16} /></Button>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="ml-2 text-xs font-bold uppercase tracking-widest text-[var(--muted)]">Profile name</label>
-                  <input
-                    type="text"
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                    placeholder="e.g. Frontend Developer"
-                    className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-5 py-3 text-sm text-[var(--text)] outline-none transition-all placeholder:text-[var(--muted)] focus:border-[var(--accent)] focus:ring-4 focus:ring-[var(--accent-soft)]"
-                  />
-                </div>
-                <div>
-                  <label className="ml-2 text-xs font-bold uppercase tracking-widest text-[var(--muted)]">Target role</label>
-                  <input
-                    type="text"
-                    value={newRole}
-                    onChange={(e) => setNewRole(e.target.value)}
-                    placeholder="e.g. Senior Frontend Engineer"
-                    className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-5 py-3 text-sm text-[var(--text)] outline-none transition-all placeholder:text-[var(--muted)] focus:border-[var(--accent)] focus:ring-4 focus:ring-[var(--accent-soft)]"
-                  />
-                </div>
-              </div>
-              <Button onClick={handleCreate} leftIcon={<CheckCircle2 size={16} />}>Create Profile</Button>
-            </Card>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {showCreate && (
+        <Card variant="solid" padding="lg" className="space-y-5">
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-xl font-bold text-[var(--text)]">New profile</h2>
+            <Button variant="ghost" size="sm" aria-label="Close new profile form" onClick={() => setShowCreate(false)}><X size={16} /></Button>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block text-xs font-bold uppercase tracking-widest text-[var(--muted)]">
+              Profile name
+              <input value={newName} onChange={(event) => setNewName(event.target.value)} placeholder="Product design applications" className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--panel)] px-5 py-3 text-sm font-medium normal-case tracking-normal text-[var(--text)] outline-none focus:border-[var(--accent)]" />
+            </label>
+            <label className="block text-xs font-bold uppercase tracking-widest text-[var(--muted)]">
+              Target role
+              <input value={newRole} onChange={(event) => setNewRole(event.target.value)} placeholder="Senior product designer" className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--panel)] px-5 py-3 text-sm font-medium normal-case tracking-normal text-[var(--text)] outline-none focus:border-[var(--accent)]" />
+            </label>
+          </div>
+          <Button onClick={() => void handleCreate()}>Create profile</Button>
+        </Card>
+      )}
 
-      {profiles.length === 0 ? (
-        <Card variant="solid" padding="lg" className="text-center py-16">
-          <Users size={48} className="mx-auto mb-4 text-[var(--muted)] opacity-40" />
-          <p className="text-lg font-bold text-[var(--text)] mb-2">No profiles yet</p>
-          <p className="text-sm text-[var(--muted)] mb-6">Create your first profile or save your current session as a profile.</p>
-          <div className="flex flex-col sm:flex-row justify-center gap-3">
-            <Button onClick={() => setShowCreate(true)} leftIcon={<Plus size={16} />}>Create Profile</Button>
-            {assets && <Button variant="secondary" onClick={handleSaveFromCurrent} leftIcon={<Save size={16} />}>Save Current</Button>}
+      {loading && <p className="text-sm text-[var(--muted)]">Loading saved profiles.</p>}
+
+      {!loading && allProfiles.length === 0 && (
+        <Card variant="solid" padding="lg" className="py-14 text-center">
+          <h2 className="font-display text-2xl font-bold text-[var(--text)]">No profiles yet</h2>
+          <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-[var(--muted)]">Create one for the role you want next, or save the documents from the session you just generated.</p>
+          <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+            <Button onClick={() => setShowCreate(true)} leftIcon={<Plus size={16} />}>Create profile</Button>
+            <Button variant="secondary" onClick={() => navigate('/record')}>Record a story</Button>
           </div>
         </Card>
-      ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {profiles.map((profile, i) => (
-            <motion.div
-              key={profile.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.08 }}
-            >
-              <Card
-                variant="solid"
-                padding="lg"
-                className={`space-y-4 h-full flex flex-col relative ${activeProfileId === profile.id ? 'ring-2 ring-[var(--accent)]' : ''}`}
-              >
-                {activeProfileId === profile.id && (
-                  <div className="absolute top-4 right-4">
-                    <Badge className="bg-[var(--accent)] text-[var(--on-accent)]">Active</Badge>
-                  </div>
-                )}
+      )}
 
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-[var(--accent-soft)] flex items-center justify-center shrink-0">
-                    <Briefcase size={20} className="text-[var(--accent)]" />
-                  </div>
-                  <div className="min-w-0">
-                    {editingId === profile.id ? (
-                      <div className="space-y-2">
-                        <input
-                          type="text"
-                          value={editName}
-                          onChange={(e) => setEditName(e.target.value)}
-                          className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)]"
-                        />
-                        <input
-                          type="text"
-                          value={editRole}
-                          onChange={(e) => setEditRole(e.target.value)}
-                          className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)]"
-                        />
-                      </div>
-                    ) : (
-                      <>
-                        <h3 className="font-display text-lg font-bold text-[var(--text)] truncate">{profile.name}</h3>
-                        <p className="text-sm text-[var(--accent)] truncate">{profile.role}</p>
-                      </>
-                    )}
-                  </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        {allProfiles.map((profile) => {
+          const active = profile.source === 'browser' && activeProfileId === profile.id;
+          const editing = editingId === profile.id;
+          return (
+            <Card key={`${profile.source}-${profile.id}`} variant="solid" padding="lg" className={`flex h-full flex-col gap-4 ${active ? 'ring-2 ring-[var(--accent)]' : ''}`}>
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                  <Briefcase size={20} />
                 </div>
-
-                <div className="flex flex-wrap gap-2 text-xs">
-                  <Badge variant="outline" className="border-[var(--border)] text-[var(--muted)]">{toneLabels[profile.tone]}</Badge>
-                  <Badge variant="outline" className="border-[var(--border)] text-[var(--muted)]">{templateLabels[profile.resumeTemplate]}</Badge>
-                </div>
-
-                <p className="text-xs text-[var(--muted)]">
-                  Created {new Date(profile.createdAt).toLocaleDateString()}
-                </p>
-
-                <div className="mt-auto flex gap-2">
-                  {editingId === profile.id ? (
-                    <>
-                      <Button size="sm" onClick={saveEdit} leftIcon={<Save size={14} />}>Save</Button>
-                      <Button variant="ghost" size="sm" onClick={() => setEditingId(null)}><X size={14} /></Button>
-                    </>
+                <div className="min-w-0 flex-1">
+                  {editing ? (
+                    <div className="space-y-2">
+                      <input aria-label="Profile name" value={editName} onChange={(event) => setEditName(event.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--panel)] px-3 py-2 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)]" />
+                      <input aria-label="Target role" value={editRole} onChange={(event) => setEditRole(event.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--panel)] px-3 py-2 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)]" />
+                    </div>
                   ) : (
                     <>
-                      {activeProfileId !== profile.id && (
-                        <Button size="sm" onClick={() => handleSwitch(profile.id)} className="flex-1">Switch</Button>
-                      )}
-                      <Button variant="ghost" size="sm" onClick={() => startEdit(profile)}><Edit3 size={14} /></Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDelete(profile.id)} className="text-red-400 hover:text-red-500"><Trash2 size={14} /></Button>
+                      <h2 className="truncate font-display text-lg font-bold text-[var(--text)]">{profile.name}</h2>
+                      <p className="truncate text-sm text-[var(--accent)]">{profile.role}</p>
                     </>
                   )}
                 </div>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
-      )}
-    </motion.div>
+                {active && <Badge>Active</Badge>}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="outline">{toneLabels[profile.tone] || profile.tone}</Badge>
+                <Badge variant="outline">{templateLabels[profile.resumeTemplate] || profile.resumeTemplate}</Badge>
+                <Badge variant="outline">{profile.source === 'account' ? 'Saved to account' : 'This browser'}</Badge>
+                <Badge variant="outline">{profile.assets ? `Score ${profile.assets.resumeScore?.overall ?? '—'}` : 'No documents yet'}</Badge>
+              </div>
+              <p className="text-xs text-[var(--muted)]">Updated {new Date(profile.createdAt).toLocaleDateString()}</p>
+              {pendingDelete === profile.id ? (
+                <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-3">
+                  <p className="text-sm text-[var(--text)]">Delete {profile.name}? This cannot be undone.</p>
+                  <div className="mt-3 flex gap-2">
+                    <Button size="sm" variant="destructive" onClick={() => void confirmDelete(profile)}>Delete</Button>
+                    <Button size="sm" variant="ghost" onClick={() => setPendingDelete(null)}>Keep</Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-auto flex flex-wrap gap-2">
+                  {editing ? (
+                    <>
+                      <Button size="sm" onClick={() => void saveEdit(profile)}>Save</Button>
+                      <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}>Cancel</Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button size="sm" className="flex-1" onClick={() => openProfile(profile)}>{profile.assets ? 'Open documents' : 'Use this role'}</Button>
+                      <Button size="sm" variant="ghost" aria-label={`Rename ${profile.name}`} onClick={() => startEdit(profile)}><Edit3 size={14} /></Button>
+                      <Button size="sm" variant="ghost" aria-label={`Delete ${profile.name}`} onClick={() => setPendingDelete(profile.id)}><Trash2 size={14} /></Button>
+                    </>
+                  )}
+                </div>
+              )}
+            </Card>
+          );
+        })}
+      </div>
+    </div>
   );
 }

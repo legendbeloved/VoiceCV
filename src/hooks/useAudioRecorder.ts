@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useVoiceCVStore, AudioState } from '../store/useVoiceCVStore';
+import { recordingLimitSeconds } from '../store/usePlanStore';
 
 export function useAudioRecorder() {
   const {
@@ -20,7 +21,7 @@ export function useAudioRecorder() {
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<number | null>(null);
 
-  const formattedTime = `0:${timeLeft.toString().padStart(2, '0')}`;
+  const formattedTime = `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`;
 
   const cleanup = useCallback(() => {
     if (timerRef.current) {
@@ -78,7 +79,7 @@ export function useAudioRecorder() {
 
       mediaRecorder.start();
       setAudioState('recording');
-      setTimeLeft(60);
+      setTimeLeft(recordingLimitSeconds());
 
       timerRef.current = window.setInterval(() => {
         const currentTime = useVoiceCVStore.getState().recordingTime;
@@ -143,7 +144,7 @@ export function useAudioRecorder() {
     cleanup();
     setAudioBlob(null);
     setAudioState('idle');
-    setTimeLeft(60);
+    setTimeLeft(recordingLimitSeconds());
     setError(null);
   };
 

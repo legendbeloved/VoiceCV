@@ -36,7 +36,7 @@ export class ErrorBoundary extends Component<Props, State> {
               <AlertCircle size={32} />
             </div>
             <h2 className="text-2xl font-display font-bold mb-4">Something went wrong</h2>
-            <p className="text-white/50 mb-8 leading-relaxed">
+            <p className="mb-8 leading-relaxed text-[var(--muted)]">
               We encountered an unexpected error. Don't worry, your progress is safe. Please try refreshing.
             </p>
             <Button 

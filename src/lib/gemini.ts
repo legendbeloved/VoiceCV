@@ -444,6 +444,226 @@ export interface CareerPathSuggestion {
   overallAdvice: string;
 }
 
+export async function applyMissingInfo({
+  assets,
+  prompt,
+  answer,
+}: {
+  assets: CareerAssets;
+  prompt: string;
+  answer: string;
+}): Promise<Pick<CareerAssets, 'resume' | 'coverLetter' | 'linkedinBio'>> {
+  if (!ai) throw new Error("Gemini API key is missing. Add GEMINI_API_KEY to your .env file and restart the dev server. Get a key at https://aistudio.google.com/apikey");
+
+  const response = await ai.models.generateContent({
+    model: MODEL_NAME,
+    contents: `You are updating VoiceCV documents with one new fact from the candidate. Keep every other fact unchanged. Do not invent metrics, dates, or employers.
+
+QUESTION: ${prompt}
+CANDIDATE ANSWER: ${answer}
+
+CURRENT RESUME:
+${assets.resume}
+
+CURRENT COVER LETTER:
+${assets.coverLetter}
+
+CURRENT LINKEDIN BIO:
+${assets.linkedinBio}
+
+Return ONLY valid JSON:
+{
+  "resume": "markdown",
+  "coverLetter": "markdown",
+  "linkedinBio": "markdown"
+}`,
+    config: { responseMimeType: "application/json" },
+  });
+
+  const parsed = parseJsonResponse(response.text || '{}') as Partial<CareerAssets>;
+  return {
+    resume: parsed.resume || assets.resume,
+    coverLetter: parsed.coverLetter || assets.coverLetter,
+    linkedinBio: parsed.linkedinBio || assets.linkedinBio,
+  };
+}
+
+export async function tailorDocumentsToJob({
+  assets,
+  jobDescription,
+  companyName,
+  targetRole,
+  tone = 'professional',
+}: {
+  assets: CareerAssets;
+  jobDescription: string;
+  companyName?: string;
+  targetRole?: string;
+  tone?: ToneStyle;
+}): Promise<{ resume: string; coverLetter: string; analysis: ATSAnalysis }> {
+  if (!ai) throw new Error("Gemini API key is missing. Add GEMINI_API_KEY to your .env file and restart the dev server. Get a key at https://aistudio.google.com/apikey");
+
+  const response = await ai.models.generateContent({
+    model: MODEL_NAME,
+    contents: `You are tailoring a resume and cover letter to one job. Stay truthful to the resume. Mirror relevant keywords naturally.
+
+TARGET ROLE: ${targetRole || assets.role}
+COMPANY: ${companyName || 'Not named'}
+TONE: ${toneLabels[tone]}
+
+JOB DESCRIPTION:
+${jobDescription}
+
+RESUME:
+${assets.resume}
+
+COVER LETTER:
+${assets.coverLetter}
+
+Return ONLY valid JSON:
+{
+  "resume": "tailored markdown resume",
+  "coverLetter": "tailored markdown cover letter",
+  "matchScore": number,
+  "matchedKeywords": ["keyword"],
+  "missingKeywords": ["keyword"],
+  "suggestedRewrites": [{ "bullet": "original", "suggestion": "revised" }],
+  "overallNotes": ["note"]
+}`,
+    config: { responseMimeType: "application/json" },
+  });
+
+  const parsed = parseJsonResponse(response.text || '{}') as any;
+  return {
+    resume: parsed.resume || assets.resume,
+    coverLetter: parsed.coverLetter || assets.coverLetter,
+    analysis: {
+      matchScore: clampScore(parsed.matchScore, 50),
+      matchedKeywords: parsed.matchedKeywords || [],
+      missingKeywords: parsed.missingKeywords || [],
+      suggestedRewrites: parsed.suggestedRewrites || [],
+      overallNotes: parsed.overallNotes || [],
+    },
+  };
+}
+
+export async function translateCareerDocuments({
+  assets,
+  language,
+}: {
+  assets: Pick<CareerAssets, 'resume' | 'coverLetter' | 'linkedinBio'>;
+  language: string;
+}): Promise<Pick<CareerAssets, 'resume' | 'coverLetter' | 'linkedinBio'>> {
+  if (!ai) throw new Error("Gemini API key is missing. Add GEMINI_API_KEY to your .env file and restart the dev server. Get a key at https://aistudio.google.com/apikey");
+  const response = await ai.models.generateContent({
+    model: MODEL_NAME,
+    contents: `Translate these career documents into ${language}. Keep names, company names, and numbers unchanged. Return ONLY valid JSON with resume, coverLetter, and linkedinBio markdown strings.
+
+RESUME:
+${assets.resume}
+
+COVER LETTER:
+${assets.coverLetter}
+
+LINKEDIN BIO:
+${assets.linkedinBio}`,
+    config: { responseMimeType: 'application/json' },
+  });
+  const parsed = parseJsonResponse(response.text || '{}') as Partial<CareerAssets>;
+  return {
+    resume: parsed.resume || assets.resume,
+    coverLetter: parsed.coverLetter || assets.coverLetter,
+    linkedinBio: parsed.linkedinBio || assets.linkedinBio,
+  };
+}
+
+export async function scoreInterviewSession(transcript: string, role: string): Promise<{ clarity: number; evidence: number; missing: string[]; summary: string }> {
+  if (!ai) throw new Error("Gemini API key is missing. Add GEMINI_API_KEY to your .env file and restart the dev server. Get a key at https://aistudio.google.com/apikey");
+  const response = await ai.models.generateContent({
+    model: MODEL_NAME,
+    contents: `Score this mock interview for a ${role} candidate. Return ONLY JSON:
+{ "clarity": number, "evidence": number, "missing": ["example the candidate should add"], "summary": "short debrief" }
+
+TRANSCRIPT:
+${transcript}`,
+    config: { responseMimeType: 'application/json' },
+  });
+  const parsed = parseJsonResponse(response.text || '{}') as any;
+  return {
+    clarity: clampScore(parsed.clarity, 60),
+    evidence: clampScore(parsed.evidence, 60),
+    missing: parsed.missing || [],
+    summary: parsed.summary || 'The session was scored.',
+  };
+}
+
+export async function draftOutreach({
+  assets,
+  company,
+  role,
+  jobDescription,
+  kind,
+}: {
+  assets: CareerAssets;
+  company: string;
+  role: string;
+  jobDescription: string;
+  kind: 'brief' | 'follow-up' | 'thank-you';
+}): Promise<string> {
+  if (!ai) throw new Error("Gemini API key is missing. Add GEMINI_API_KEY to your .env file and restart the dev server. Get a key at https://aistudio.google.com/apikey");
+  const task = kind === 'brief'
+    ? 'Write a 5-line company brief the candidate can read before applying: what the company seems to want, and which of the candidate strengths match. Stay factual to the job description.'
+    : kind === 'follow-up'
+      ? 'Write a short follow-up email the candidate can send after applying. Keep it under 120 words, specific, and ready to send.'
+      : 'Write a short thank-you email the candidate can send after an interview. Keep it under 120 words and ready to send.';
+  const response = await ai.models.generateContent({
+    model: MODEL_NAME,
+    contents: `${task}
+
+ROLE: ${role}
+COMPANY: ${company || 'Not named'}
+JOB DESCRIPTION:
+${jobDescription || 'Not provided.'}
+
+RESUME:
+${assets.resume}
+
+Return ONLY JSON: { "text": "the note" }`,
+    config: { responseMimeType: 'application/json' },
+  });
+  const parsed = parseJsonResponse(response.text || '{}') as { text?: string };
+  return parsed.text || '';
+}
+
+export async function draftInterviewQuestions({
+  role,
+  jobDescription,
+  resume,
+}: {
+  role: string;
+  jobDescription: string;
+  resume: string;
+}): Promise<Array<{ question: string; hint: string }>> {
+  if (!ai) throw new Error("Gemini API key is missing. Add GEMINI_API_KEY to your .env file and restart the dev server. Get a key at https://aistudio.google.com/apikey");
+  const response = await ai.models.generateContent({
+    model: MODEL_NAME,
+    contents: `Write 8 interview questions for this role, based on the job description. For each question, add a short hint that uses only facts already in the resume.
+
+ROLE: ${role}
+JOB DESCRIPTION:
+${jobDescription || 'Not provided.'}
+RESUME:
+${resume}
+
+Return ONLY JSON: { "questions": [{ "question": "string", "hint": "string" }] }`,
+    config: { responseMimeType: 'application/json' },
+  });
+  const parsed = parseJsonResponse(response.text || '{}') as { questions?: Array<{ question?: string; hint?: string }> };
+  return (parsed.questions || [])
+    .filter((item) => item.question)
+    .map((item) => ({ question: item.question || '', hint: item.hint || '' }));
+}
+
 export async function suggestCareerPath(assets: CareerAssets): Promise<CareerPathSuggestion> {
   if (!ai) throw new Error("Gemini API key is missing. Add GEMINI_API_KEY to your .env file and restart the dev server. Get a key at https://aistudio.google.com/apikey");
 

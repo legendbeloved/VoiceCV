@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { ArrowRight, ClipboardCheck, FileText, Linkedin, Mic2, Sparkles, Wand2, Target, Mail, Upload, Route, Users, Palette, Database } from 'lucide-react';
+import { ArrowRight, ClipboardCheck, FileText, Linkedin, Mic2, Sparkles, Wand2, Target, Mail, Route, Users, Palette, Database, Upload } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Link } from 'react-router-dom';
@@ -10,7 +10,7 @@ interface LandingPageProps {
 }
 
 const flowSteps = [
-  { icon: Mic2, title: 'Record your story', copy: 'Speak naturally for up to 60 seconds about your background, skills, wins, and next role.' },
+  { icon: Mic2, title: 'Record your story', copy: 'Speak naturally for up to 60 seconds, or 3 minutes on Premium, about your background, skills, wins, and next role.' },
   { icon: Wand2, title: 'VoiceCV extracts the signal', copy: 'Audio is transcribed, cleaned, and turned into structured career facts for the generator.' },
   { icon: ClipboardCheck, title: 'Use the documents', copy: 'Review the resume, cover letter, and LinkedIn bio, then copy or download the one you need.' },
 ];
@@ -41,13 +41,19 @@ export function LandingPage({ onStart }: LandingPageProps) {
               VoiceCV records your pitch, extracts the useful career details, then generates a resume, cover letter, and LinkedIn bio without making you stare at a blank page.
             </p>
 
-            <div className="mt-8 flex flex-col sm:flex-row gap-4">
-              <Button size="lg" onClick={onStart} rightIcon={<ArrowRight size={20} />}>
-                Record Your Story
+            <div className="mt-8 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+              <Button
+                size="lg"
+                onClick={onStart}
+                className="rounded-full px-6 normal-case tracking-normal"
+                leftIcon={<Mic2 size={18} />}
+                rightIcon={<ArrowRight size={18} />}
+              >
+                Record your story
               </Button>
               <Link to="/import">
-                <Button size="lg" variant="secondary" leftIcon={<Upload size={18} />}>
-                  Import Profile
+                <Button size="lg" variant="secondary" className="rounded-full px-6" leftIcon={<Upload size={18} />}>
+                  Import profile
                 </Button>
               </Link>
             </div>
@@ -77,7 +83,7 @@ export function LandingPage({ onStart }: LandingPageProps) {
                       key={index}
                       animate={{ height: [18, 38 + ((index * 13) % 54), 18] }}
                       transition={{ duration: 1.1 + (index % 5) * 0.13, repeat: Infinity, ease: 'easeInOut' }}
-                      className="w-1.5 rounded-full bg-[var(--accent)]"
+                      className={`w-1.5 rounded-full bg-[var(--accent)] ${index > 18 ? 'hidden sm:block' : ''}`}
                     />
                   ))}
                 </div>
@@ -136,19 +142,17 @@ export function LandingPage({ onStart }: LandingPageProps) {
       <section id="features" className="pb-16 sm:pb-20 lg:pb-24">
         <div className="mb-8 lg:mb-10 max-w-2xl">
 
-          <h2 className="mt-2 text-3xl sm:text-4xl lg:text-5xl font-display font-extrabold text-[var(--text)]">Everything you need to land your next role.</h2>
-          <p className="mt-4 text-[var(--muted)]">From voice recording to career path planning. Explore all the tools VoiceCV offers.</p>
+          <h2 className="mt-2 text-3xl sm:text-4xl lg:text-5xl font-display font-extrabold text-[var(--text)]">After you have a profile</h2>
+          <p className="mt-4 text-[var(--muted)]">Record or import first. These tools tailor, practice, and store the documents that come back.</p>
         </div>
-        <div className="grid gap-4 sm:gap-5 lg:gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:gap-5 lg:gap-6 md:grid-cols-2 lg:grid-cols-3">
           {[
-            { icon: Target, title: 'ATS Optimizer', copy: 'Compare your resume against job descriptions. Get keyword match scores and rewrite suggestions.', href: '/ats-optimizer' },
-            { icon: Mail, title: 'Cover Letter AI', copy: 'Generate company-specific cover letters that mention the company mission and culture.', href: '/cover-letter' },
-            { icon: Upload, title: 'Import Profile', copy: 'Bootstrap from LinkedIn, resume text, or PDF/Word files. AI parses everything automatically.', href: '/import' },
-            { icon: Route, title: 'Career Path', copy: 'AI suggests career progression, skill gaps, and courses based on your experience.', href: '/career-path' },
-            { icon: Users, title: 'Multi-Profile', copy: 'Save multiple profiles for different roles. Switch between them with different preferences.', href: '/profiles' },
-            { icon: Database, title: 'Local Vault', copy: 'All your generated documents stored locally. Search, filter, and access anytime.', href: '/vault' },
-            { icon: Palette, title: 'Themes', copy: 'Customize your documents with professional templates, color schemes, and layouts.', href: '/themes' },
-            { icon: Users, title: 'Interview Prep', copy: 'Practice with an AI Hiring Manager that asks realistic questions based on your resume.', href: '/interview' },
+            { icon: Target, title: 'ATS Optimizer', copy: 'Compare your resume against a job description and see which keywords are present or missing.', href: '/ats-optimizer' },
+            { icon: Mail, title: 'Cover Letter AI', copy: 'Write a letter for a named company once the resume exists.', href: '/cover-letter' },
+            { icon: Route, title: 'Career Path', copy: 'See nearby roles, skill gaps, and courses based on the story you already told.', href: '/career-path' },
+            { icon: Users, title: 'Profiles', copy: 'Keep a separate profile for each role you are aiming at.', href: '/profiles' },
+            { icon: Database, title: 'Vault', copy: 'Search saved documents by name or role and open them again.', href: '/vault' },
+            { icon: Palette, title: 'Themes and interview', copy: 'Style the resume, then practice questions drawn from it.', href: '/interview' },
           ].map((feature) => (
             <Link key={feature.title} to={feature.href}>
               <Card padding="lg" hover className="h-full">

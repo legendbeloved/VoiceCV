@@ -36,7 +36,7 @@ export function Toast({
       animate={{ opacity: 1, x: 0, scale: 1 }}
       exit={{ opacity: 0, x: 20, scale: 0.9 }}
       className={cn(
-        "flex items-center gap-4 p-4 bg-[var(--panel)] border border-[var(--border)] shadow-[var(--shadow)] backdrop-blur-xl rounded-2xl min-w-[300px] pointer-events-auto",
+        "flex w-full items-start gap-3 p-4 bg-[var(--panel)] border border-[var(--border)] shadow-[var(--shadow)] backdrop-blur-xl rounded-2xl pointer-events-auto sm:max-w-sm",
         "border-l-4",
         variant === 'success' && "border-l-emerald-500",
         variant === 'error' && "border-l-red-500",
@@ -58,7 +58,7 @@ export function Toast({
 // Simple Toast Manager Container (to be used in App.tsx or a provider)
 export function ToastContainer({ toasts, onClose }: { toasts: any[], onClose: (id: string) => void }) {
   return (
-    <div className="fixed top-24 right-4 sm:right-8 z-[100] flex flex-col gap-4 pointer-events-none">
+    <div className="fixed top-24 left-4 right-4 z-[100] flex flex-col gap-3 pointer-events-none sm:left-auto sm:right-8 sm:w-96">
       <AnimatePresence mode="popLayout">
         {toasts.map((toast) => (
           <Toast key={toast.id} {...toast} onClose={onClose} />

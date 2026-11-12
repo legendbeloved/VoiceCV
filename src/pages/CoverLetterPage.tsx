@@ -6,11 +6,14 @@ import { useVoiceCVStore } from '../store/useVoiceCVStore';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { personalizeCoverLetter } from '../lib/gemini';
+import { canUseFreeAction, recordFreeAction } from '../store/usePlanStore';
+import { useNavigate } from 'react-router-dom';
 import { CopyButton } from '../components/results/CopyButton';
 import { DownloadButton } from '../components/results/DownloadButton';
 
 export default function CoverLetterPage({ onToast }: { onToast: (msg: string, v: 'success' | 'error' | 'info') => void }) {
-  const { assets, tone } = useVoiceCVStore();
+  const { assets, tone, updateAssetField, setCompanyName: saveCompanyName, setJobDescription: saveJobDescription } = useVoiceCVStore();
+  const navigate = useNavigate();
   const [companyName, setCompanyName] = useState('');
   const [jobDescription, setJobDescription] = useState('');
   const [generatedLetter, setGeneratedLetter] = useState('');
@@ -27,6 +30,11 @@ export default function CoverLetterPage({ onToast }: { onToast: (msg: string, v:
       onToast('Please paste a job description.', 'error');
       return;
     }
+    if (!canUseFreeAction('coverLetters')) {
+      onToast('The letter from your story is free. A letter for another company is Premium.', 'info');
+      navigate('/upgrade');
+      return;
+    }
     setLoading(true);
     try {
       const letter = await personalizeCoverLetter({
@@ -36,7 +44,11 @@ export default function CoverLetterPage({ onToast }: { onToast: (msg: string, v:
         tone,
       });
       setGeneratedLetter(letter);
-      onToast('Cover letter generated successfully.', 'success');
+      updateAssetField('coverLetter', letter);
+      saveCompanyName(companyName);
+      saveJobDescription(jobDescription);
+      recordFreeAction('coverLetters');
+      onToast('Cover letter saved onto your documents.', 'success');
     } catch (error) {
       const msg = error instanceof Error && error.message.includes('API key')
         ? 'VoiceCV AI configuration is missing.'
@@ -54,6 +66,7 @@ export default function CoverLetterPage({ onToast }: { onToast: (msg: string, v:
 
   const handleSave = () => {
     setGeneratedLetter(editableContent);
+    updateAssetField('coverLetter', editableContent);
     setIsEditing(false);
     onToast('Changes saved.', 'success');
   };

@@ -1,11 +1,12 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { motion } from 'motion/react';
-import { Upload, FileText, Linkedin, ArrowRight, CheckCircle2, AlertCircle, Loader2, Briefcase, GraduationCap, Award, Info, Clipboard, ClipboardCheck } from 'lucide-react';
+import { Upload, FileText, Linkedin, ArrowRight, CheckCircle2, AlertCircle, Loader2, Briefcase, GraduationCap, Award, Info, Clipboard, ClipboardCheck, X, Edit2, Save, Eye, EyeOff } from 'lucide-react';
 import { useVoiceCVStore } from '../store/useVoiceCVStore';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
-import { parseLinkedInProfile, LinkedInProfile, CareerAssets } from '../lib/gemini';
+import { parseLinkedInProfile, processVoiceToDocuments, LinkedInProfile, CareerAssets } from '../lib/gemini';
+import { useNavigate } from 'react-router-dom';
 
 // @ts-ignore - mammoth has no types
 import mammoth from 'mammoth';
@@ -36,14 +37,90 @@ async function extractTextFromDocx(file: File): Promise<string> {
 }
 
 export default function ImportPage({ onToast }: { onToast: (msg: string, v: 'success' | 'error' | 'info') => void }) {
-  const { setAssets, setJobRole, setTranscript } = useVoiceCVStore();
+  const { setAssets, setJobRole, setTranscript, pushVersion } = useVoiceCVStore();
+  const navigate = useNavigate();
+  const [creating, setCreating] = useState(false);
   const [importMode, setImportMode] = useState<'linkedin' | 'resume'>('linkedin');
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(false);
   const [parsedProfile, setParsedProfile] = useState<LinkedInProfile | null>(null);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [pasteMode, setPasteMode] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [showParsingPreview, setShowParsingPreview] = useState(false);
+  const [editableProfile, setEditableProfile] = useState<LinkedInProfile | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+
+    setUploadedFileName(file.name);
+    const extension = file.name.split('.').pop()?.toLowerCase();
+
+    if (extension === 'pdf') {
+      try {
+        onToast('Reading PDF file...', 'info');
+        const text = await extractTextFromPDF(file);
+        if (text.trim().length > 50) {
+          setInputText(text);
+          setImportMode('resume');
+          onToast(`PDF "${file.name}" loaded. Click Parse to extract profile data.`, 'success');
+        } else {
+          onToast('Could not extract enough text from PDF. Please open the PDF, select all text, copy and paste it manually.', 'error');
+          setPasteMode(true);
+        }
+      } catch {
+        onToast('Failed to read PDF. Please open it, select all text, copy and paste manually.', 'error');
+        setPasteMode(true);
+      }
+      return;
+    }
+
+    if (extension === 'docx' || extension === 'doc') {
+      try {
+        onToast('Reading Word document...', 'info');
+        const text = await extractTextFromDocx(file);
+        if (text.trim().length > 50) {
+          setInputText(text);
+          setImportMode('resume');
+          onToast(`Word document "${file.name}" loaded. Click Parse to extract profile data.`, 'success');
+        } else {
+          onToast('Could not extract enough text from Word document. Please copy and paste the content manually.', 'error');
+          setPasteMode(true);
+        }
+      } catch {
+        onToast('Failed to read Word document. Please copy and paste the content manually.', 'error');
+        setPasteMode(true);
+      }
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      setInputText(text);
+      setImportMode('resume');
+      onToast(`File "${file.name}" loaded successfully. Click Parse to extract profile data.`, 'success');
+    };
+    reader.onerror = () => {
+      onToast(`Failed to read file "${file.name}". Please try copying the text manually.`, 'error');
+    };
+    reader.readAsText(file);
+  }, [onToast]);
 
   const handleParse = async () => {
     if (!inputText.trim()) {
@@ -54,7 +131,9 @@ export default function ImportPage({ onToast }: { onToast: (msg: string, v: 'suc
     try {
       const profile = await parseLinkedInProfile(inputText);
       setParsedProfile(profile);
-      onToast('Profile parsed successfully.', 'success');
+      setEditableProfile(profile);
+      setShowParsingPreview(true);
+      onToast('Profile parsed successfully. Review and edit if needed.', 'success');
     } catch (error) {
       const msg = error instanceof Error && error.message.includes('API key')
         ? 'VoiceCV AI configuration is missing. Add GEMINI_API_KEY to your .env.local file and restart the dev server.'
@@ -65,50 +144,84 @@ export default function ImportPage({ onToast }: { onToast: (msg: string, v: 'suc
     }
   };
 
-  const handleImportToStore = () => {
-    if (!parsedProfile) return;
+  const handleEditProfile = (field: keyof LinkedInProfile, value: any) => {
+    if (!editableProfile) return;
+    setEditableProfile({ ...editableProfile, [field]: value });
+  };
 
-    const experienceText = parsedProfile.experience
+  const handleSaveEdits = () => {
+    if (editableProfile) {
+      setParsedProfile(editableProfile);
+      setShowParsingPreview(false);
+      onToast('Profile updated successfully.', 'success');
+    }
+  };
+
+  const handleCancelEdits = () => {
+    setEditableProfile(parsedProfile);
+    setShowParsingPreview(false);
+  };
+
+  const handleImportToStore = async () => {
+    if (!parsedProfile) return;
+    // Use editable profile if it exists and is different from parsed
+    const profileToUse = editableProfile && JSON.stringify(editableProfile) !== JSON.stringify(parsedProfile) ? editableProfile : parsedProfile;
+
+    const experienceText = profileToUse.experience
       .map((e) => `${e.title} at ${e.company} (${e.duration}): ${e.description}`)
       .join('\n');
 
-    const educationText = parsedProfile.education
+    const educationText = profileToUse.education
       .map((e) => `${e.degree} in ${e.field} from ${e.school} (${e.year})`)
       .join('\n');
 
     const fullTranscript = [
-      `Name: ${parsedProfile.name}`,
-      `Headline: ${parsedProfile.headline}`,
-      `\nSummary:\n${parsedProfile.summary}`,
+      `Name: ${profileToUse.name}`,
+      `Headline: ${profileToUse.headline}`,
+      `\nSummary:\n${profileToUse.summary}`,
       `\nExperience:\n${experienceText}`,
       `\nEducation:\n${educationText}`,
-      `\nSkills: ${parsedProfile.skills.join(', ')}`,
+      `\nSkills: ${profileToUse.skills.join(', ')}`,
     ].join('\n');
 
     const assets: CareerAssets = {
       transcript: fullTranscript,
       resume: '',
       coverLetter: '',
-      linkedinBio: parsedProfile.summary,
-      strengths: parsedProfile.skills.slice(0, 5),
-      keywords: parsedProfile.skills,
+      linkedinBio: profileToUse.summary,
+      strengths: profileToUse.skills.slice(0, 5),
+      keywords: profileToUse.skills,
       resumeScore: { overall: 70, clarity: 70, atsKeywords: 65, impact: 68, completeness: 72, notes: [] },
       missingInfoPrompts: ['Add quantified achievements to each role.', 'Include specific project outcomes.'],
-      name: parsedProfile.name,
-      role: parsedProfile.headline || 'Professional',
+      name: profileToUse.name,
+      role: profileToUse.headline || 'Professional',
       extracted: {
-        skills: parsedProfile.skills,
-        experience: parsedProfile.experience.map((e) => `${e.title} at ${e.company}`),
-        education: parsedProfile.education.map((e) => `${e.degree} from ${e.school}`),
-        achievements: parsedProfile.experience.flatMap((e) => e.description ? [e.description] : []),
+        skills: profileToUse.skills,
+        experience: profileToUse.experience.map((e) => `${e.title} at ${e.company}`),
+        education: profileToUse.education.map((e) => `${e.degree} from ${e.school}`),
+        achievements: profileToUse.experience.flatMap((e) => e.description ? [e.description] : []),
       },
       contactInfo: { email: '', phone: '', location: '' },
     };
 
-    setAssets(assets);
-    setJobRole(parsedProfile.headline || 'Professional');
     setTranscript(fullTranscript);
-    onToast('Profile imported to VoiceCV. Go to Record to generate full documents.', 'success');
+    setJobRole(profileToUse.headline || 'Professional');
+    setCreating(true);
+    try {
+      const documents = await processVoiceToDocuments({
+        transcriptHint: fullTranscript,
+        targetRole: profileToUse.headline || 'Professional',
+      });
+      setAssets(documents);
+      pushVersion('Imported profile');
+      onToast('Documents created from the imported profile.', 'success');
+      navigate('/results');
+    } catch (error) {
+      setAssets(assets);
+      onToast(error instanceof Error ? error.message : 'The profile was saved, but the documents were not written.', 'error');
+    } finally {
+      setCreating(false);
+    }
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -212,10 +325,13 @@ export default function ImportPage({ onToast }: { onToast: (msg: string, v: 'suc
                 <div className="space-y-4">
                   <div
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[var(--border)] bg-[var(--surface)] p-8 sm:p-10 text-center cursor-pointer hover:border-[var(--accent)] hover:bg-[var(--accent-soft)] transition-all"
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    className={`flex flex-col items-center justify-center rounded-2xl border-2 border-dashed bg-[var(--surface)] p-8 sm:p-10 text-center cursor-pointer transition-all ${isDragging ? 'border-[var(--accent)] bg-[var(--accent-soft)] scale-105' : 'border-[var(--border)] hover:border-[var(--accent)] hover:bg-[var(--accent-soft)]'}`}
                   >
-                    <Upload size={40} className="mb-4 text-[var(--muted)]" />
-                    <p className="text-sm font-bold text-[var(--text)]">Click to upload PDF, Word, or text file</p>
+                    <Upload size={40} className={`mb-4 ${isDragging ? 'text-[var(--accent)]' : 'text-[var(--muted)]'}`} />
+                    <p className="text-sm font-bold text-[var(--text)]">Click to upload or drag & drop PDF, Word, or text file</p>
                     <p className="mt-1 text-xs text-[var(--muted)]">Supports .pdf, .docx, .doc, .txt, .csv</p>
                   </div>
                   <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx,.txt,.csv" onChange={handleFileUpload} className="hidden" />
@@ -258,18 +374,64 @@ export default function ImportPage({ onToast }: { onToast: (msg: string, v: 'suc
               <Card variant="solid" padding="lg" className="space-y-5">
                 <div className="flex items-center justify-between">
                   <h2 className="font-display text-xl font-bold text-[var(--text)]">Parsed Profile</h2>
-                  <CheckCircle2 size={20} className="text-green-400" />
-                </div>
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-widest text-[var(--muted)]">Name</p>
-                    <p className="text-lg font-bold text-[var(--text)]">{parsedProfile.name}</p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowParsingPreview(!showParsingPreview)}
+                      leftIcon={showParsingPreview ? <EyeOff size={16} /> : <Edit2 size={16} />}
+                    >
+                      {showParsingPreview ? 'View' : 'Edit'}
+                    </Button>
+                    <CheckCircle2 size={20} className="text-green-400" />
                   </div>
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-widest text-[var(--muted)]">Headline</p>
-                    <p className="text-sm text-[var(--text)]">{parsedProfile.headline}</p>
-                  </div>
                 </div>
+                
+                {showParsingPreview && editableProfile ? (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-xs font-bold uppercase tracking-widest text-[var(--muted)]">Name</label>
+                      <input
+                        type="text"
+                        value={editableProfile.name}
+                        onChange={(e) => handleEditProfile('name', e.target.value)}
+                        className="mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold uppercase tracking-widest text-[var(--muted)]">Headline</label>
+                      <input
+                        type="text"
+                        value={editableProfile.headline}
+                        onChange={(e) => handleEditProfile('headline', e.target.value)}
+                        className="mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold uppercase tracking-widest text-[var(--muted)]">Summary</label>
+                      <textarea
+                        value={editableProfile.summary}
+                        onChange={(e) => handleEditProfile('summary', e.target.value)}
+                        className="mt-1 min-h-24 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)] resize-y"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button onClick={handleSaveEdits} size="sm" leftIcon={<Save size={16} />}>Save Changes</Button>
+                      <Button variant="ghost" onClick={handleCancelEdits} size="sm" leftIcon={<X size={16} />}>Cancel</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest text-[var(--muted)]">Name</p>
+                      <p className="text-lg font-bold text-[var(--text)]">{parsedProfile.name}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest text-[var(--muted)]">Headline</p>
+                      <p className="text-sm text-[var(--text)]">{parsedProfile.headline}</p>
+                    </div>
+                  </div>
+                )}
               </Card>
 
               {parsedProfile.experience.length > 0 && (
@@ -319,8 +481,8 @@ export default function ImportPage({ onToast }: { onToast: (msg: string, v: 'suc
                 </Card>
               )}
 
-              <Button onClick={handleImportToStore} className="w-full" size="lg" leftIcon={<CheckCircle2 size={18} />}>
-                Import to VoiceCV & Generate Documents
+              <Button onClick={() => void handleImportToStore()} loading={creating} className="w-full" size="lg" leftIcon={<CheckCircle2 size={18} />}>
+                Create documents from this profile
               </Button>
             </>
           ) : (

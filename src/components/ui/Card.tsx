@@ -50,7 +50,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
         whileHover={shouldAnimate ? hoverAnimation : undefined}
         whileTap={onClick ? tapAnimation : undefined}
         className={cn(
-          "rounded-3xl overflow-hidden transition-all duration-300 focus-within:ring-2 focus-within:ring-[var(--accent)]/55",
+          "w-full min-w-0 rounded-3xl overflow-hidden transition-all duration-300 focus-within:ring-2 focus-within:ring-[var(--accent)]/55",
           variantClasses[variant],
           paddingClasses[padding],
           (interactive || onClick) && 'cursor-pointer',

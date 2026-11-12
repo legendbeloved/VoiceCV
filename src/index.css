@@ -412,11 +412,11 @@ html {
 
 /* ========== RESPONSIVE UTILITIES ========== */
 
-/* Touch-friendly minimum tap targets */
+/* Touch-friendly minimum tap targets. Width stays flexible so rows can wrap. */
 @media (pointer: coarse) {
-  button, [role="button"], a {
+  button,
+  [role="button"] {
     min-height: 44px;
-    min-width: 44px;
   }
 }
 
@@ -430,7 +430,50 @@ html {
 /* Prevent horizontal overflow */
 main, section, article, .page-content {
   max-width: 100%;
-  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+img,
+video,
+canvas,
+svg,
+table,
+pre {
+  max-width: 100%;
+}
+
+main h1,
+main h2,
+main h3,
+main p,
+main li,
+main label {
+  overflow-wrap: break-word;
+}
+
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@media (max-width: 639px) {
+  main h1.font-display:not([class*="text-["]) {
+    font-size: clamp(1.75rem, 8vw, 2.15rem);
+    line-height: 1.12;
+  }
+
+  .action-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .action-row > *,
+  .action-row > * > button {
+    width: 100%;
+    min-width: 0;
+  }
 }
 
 /* Responsive grid helpers */
@@ -492,5 +535,82 @@ main, section, article, .page-content {
 @media (max-width: 640px) {
   input, textarea, select {
     font-size: 16px; /* Prevents zoom on iOS */
+  }
+}
+
+.resume-sheet {
+  background: #f7f4ee;
+  color: #1c1915;
+  border-color: #e4dccf;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.resume-sheet h1,
+.resume-sheet h2,
+.resume-sheet h3,
+.resume-sheet strong {
+  color: #1c1915;
+}
+
+[data-resume-theme="voyager"] .resume-sheet {
+  background: #f4f7ff;
+  color: #172033;
+  border-color: #d5e2ff;
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+[data-resume-theme="voyager"] .resume-sheet h1,
+[data-resume-theme="voyager"] .resume-sheet h2,
+[data-resume-theme="voyager"] .resume-sheet h3 {
+  color: #1e4fc7;
+}
+
+[data-resume-theme="minimalist"] .resume-sheet {
+  background: #ffffff;
+  color: #111111;
+  border-color: #e5e5e5;
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+[data-resume-theme="minimalist"] .resume-sheet h1,
+[data-resume-theme="minimalist"] .resume-sheet h2,
+[data-resume-theme="minimalist"] .resume-sheet h3,
+[data-resume-theme="minimalist"] .resume-sheet strong {
+  color: #111111;
+}
+
+[data-resume-theme="neon"] .resume-sheet {
+  background: #071018;
+  color: #d7fff8;
+  border-color: #134e4a;
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+[data-resume-theme="neon"] .resume-sheet h1,
+[data-resume-theme="neon"] .resume-sheet h2,
+[data-resume-theme="neon"] .resume-sheet h3,
+[data-resume-theme="neon"] .resume-sheet strong {
+  color: #5eead4;
+}
+
+[data-resume-theme="executive"] .resume-sheet {
+  background: #fbf7f0;
+  color: #1e293b;
+  border-color: #e7d7c3;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+[data-resume-theme="executive"] .resume-sheet h1,
+[data-resume-theme="executive"] .resume-sheet h2,
+[data-resume-theme="executive"] .resume-sheet h3 {
+  color: #9a3412;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

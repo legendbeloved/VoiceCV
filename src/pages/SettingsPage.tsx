@@ -1,186 +1,156 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
-import { 
-  Settings, User, Brain, Palette, 
-  Bell, Shield, Zap, Sparkles,
-  ChevronRight, Save, Globe
-} from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { usePlanStore } from '../store/usePlanStore';
+import { Shield, User } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { GlassPanel } from '../components/ui/GlassPanel';
 import { useAuth } from '../auth/AuthProvider';
 import { supabase } from '../lib/supabase';
+import { clearVoiceDraft, readVoiceDefaults, useVoiceCVStore, writeVoiceDefaults } from '../store/useVoiceCVStore';
+import type { ResumeTemplate, ToneStyle } from '../lib/gemini';
+
+const tones: Array<{ id: ToneStyle; label: string; description: string }> = [
+  { id: 'professional', label: 'Professional', description: 'Clear and recruiter-friendly.' },
+  { id: 'warm', label: 'Warm', description: 'Approachable and human.' },
+  { id: 'executive', label: 'Executive', description: 'Concise and strategic.' },
+  { id: 'confident', label: 'Confident', description: 'Energetic and achievement-led.' },
+  { id: 'creative', label: 'Creative', description: 'Memorable, still polished.' },
+];
+
+const templates: Array<{ id: ResumeTemplate; label: string }> = [
+  { id: 'ats', label: 'Classic ATS' },
+  { id: 'modern', label: 'Modern' },
+  { id: 'executive', label: 'Executive' },
+  { id: 'creative', label: 'Creative' },
+];
+
+const sections = [
+  { id: 'defaults', label: 'Writing defaults' },
+  { id: 'account', label: 'Account' },
+  { id: 'privacy', label: 'Privacy' },
+];
 
 export default function SettingsPage() {
-  const [activeSection, setActiveSection] = useState('personalization');
   const { user, signOut } = useAuth();
-  const [securityMessage, setSecurityMessage] = useState('');
+  const { tone, resumeTemplate, setTone, setResumeTemplate } = useVoiceCVStore();
+  const plan = usePlanStore((state) => state.plan);
+  const [section, setSection] = useState('defaults');
+  const [notice, setNotice] = useState('');
 
-  const sendPasswordReset = async () => {
-    if (!user?.email || !supabase) return;
-    const { error } = await supabase.auth.resetPasswordForEmail(user.email, { redirectTo: `${window.location.origin}/login` });
-    setSecurityMessage(error ? error.message : 'Password reset instructions were sent to your email.');
+  const updateTone = (next: ToneStyle) => {
+    setTone(next);
+    writeVoiceDefaults(next, useVoiceCVStore.getState().resumeTemplate);
+    setNotice('Default tone saved. The next story uses it.');
   };
 
-  const sections = [
-    { id: 'personalization', label: 'AI Personalization', icon: Brain },
-    { id: 'themes', label: 'Resume Themes', icon: Palette },
-    { id: 'account', label: 'Account Details', icon: User },
-    { id: 'security', label: 'Security & Privacy', icon: Shield },
-  ];
+  const updateTemplate = (next: ResumeTemplate) => {
+    setResumeTemplate(next);
+    writeVoiceDefaults(useVoiceCVStore.getState().tone, next);
+    setNotice('Default template saved. The next story uses it.');
+  };
+
+  const sendPasswordReset = async () => {
+    if (!user?.email || !supabase) {
+      setNotice('Sign in with email before resetting a password.');
+      return;
+    }
+    const { error } = await supabase.auth.resetPasswordForEmail(user.email, { redirectTo: `${window.location.origin}/login` });
+    setNotice(error ? error.message : 'Password reset instructions were sent to your email.');
+  };
+
+  const saved = readVoiceDefaults();
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-12">
-      <header className="mb-12">
-        <div className="flex items-center gap-4 mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-brand-violet/10 flex items-center justify-center text-brand-violet">
-            <Settings size={24} />
-          </div>
-          <div>
-            <h1 className="text-4xl font-display font-black tracking-tight uppercase">Control Center</h1>
-            <p className="text-white/40 text-xs font-bold tracking-[0.3em] uppercase">Settings & AI Personalization</p>
-          </div>
-        </div>
-      </header>
+    <div className="mx-auto grid w-full max-w-6xl gap-8 lg:grid-cols-[220px_minmax(0,1fr)]">
+      <div>
+        <h1 className="font-display text-3xl font-extrabold text-[var(--text)] sm:text-4xl">Settings</h1>
+        <p className="mt-3 text-sm leading-6 text-[var(--muted)]">Changes save as you make them.</p>
+        <nav className="mt-6 flex gap-2 overflow-x-auto lg:flex-col" aria-label="Settings sections">
+          {sections.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              aria-current={section === item.id ? 'page' : undefined}
+              onClick={() => setSection(item.id)}
+              className={`shrink-0 whitespace-nowrap rounded-2xl px-4 py-3 text-left text-sm font-bold lg:whitespace-normal ${section === item.id ? 'bg-[var(--accent-soft)] text-[var(--text)]' : 'text-[var(--muted)] hover:bg-[var(--surface)]'}`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </nav>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Sidebar Navigation */}
-        <aside className="lg:col-span-3 space-y-2">
-          {sections.map((section) => {
-            const Icon = section.icon;
-            return (
-              <button
-                key={section.id}
-                onClick={() => setActiveSection(section.id)}
-                className={`w-full flex items-center gap-3 px-6 py-4 rounded-2xl text-sm font-bold tracking-wide transition-all ${
-                  activeSection === section.id 
-                    ? 'bg-brand-violet text-white shadow-lg shadow-brand-violet/20' 
-                    : 'text-white/40 hover:text-white/60 hover:bg-white/5'
-                }`}
-              >
-                <Icon size={18} />
-                {section.label}
-                {activeSection === section.id && <ChevronRight size={14} className="ml-auto" />}
-              </button>
-            );
-          })}
-        </aside>
+      <div className="space-y-4">
+        {notice && <p role="status" className="rounded-2xl bg-[var(--accent-soft)] px-4 py-3 text-sm text-[var(--text)]">{notice}</p>}
 
-        {/* Content Area */}
-        <main className="lg:col-span-9">
-          <div className="space-y-8">
-            {activeSection === 'personalization' && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-8"
-              >
-                <GlassPanel className="p-8">
-                  <div className="flex items-start justify-between mb-8">
-                    <div>
-                      <h3 className="text-xl font-display font-bold mb-2 flex items-center gap-2">
-                        <Brain size={20} className="text-brand-violet" />
-                        AI Extraction Sensitivity
-                      </h3>
-                      <p className="text-sm text-white/50">Adjust how VoiceCV interprets your voice pitch.</p>
-                    </div>
-                    <Zap size={24} className="text-voice-amber animate-pulse" />
-                  </div>
-
-                  <div className="space-y-6">
-                    <div className="space-y-4">
-                      <div className="flex justify-between text-xs font-bold uppercase tracking-widest text-white/30">
-                        <span>Literal (Concise)</span>
-                        <span>Creative (Narrative)</span>
-                      </div>
-                      <input type="range" className="w-full accent-brand-violet h-2 bg-white/5 rounded-lg appearance-none cursor-pointer" />
-                    </div>
-
-                    <div className="pt-6 border-t border-white/5 space-y-4">
-                      <h4 className="text-sm font-bold uppercase tracking-widest text-white/40">Default Tone of Voice</h4>
-                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                        {['Confident', 'Humble', 'Tech-Native', 'Executive'].map(tone => (
-                          <button key={tone} className="p-3 min-h-[44px] rounded-xl bg-white/5 border border-white/5 text-xs font-bold hover:border-brand-violet/30 hover:bg-brand-violet/5 transition-all">
-                            {tone}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </GlassPanel>
-
-                <Card variant="glass" className="p-8">
-                  <h3 className="text-xl font-display font-bold mb-6 flex items-center gap-2">
-                    <Globe size={20} className="text-brand-violet" />
-                    Target Industry Bias
-                  </h3>
-                  <div className="space-y-4">
-                    <p className="text-sm text-white/50">VoiceCV will prioritize keywords and skills relevant to these areas.</p>
-                    <div className="flex flex-wrap gap-2">
-                      {['SaaS', 'Fintech', 'AI/ML', 'Web3', 'HealthTech', 'E-commerce'].map(tag => (
-                        <button key={tag} className="px-4 py-2.5 min-h-[44px] rounded-full border border-white/10 text-[10px] font-black uppercase tracking-widest hover:border-brand-violet transition-colors">
-                          {tag}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </Card>
-              </motion.div>
-            )}
-
-            {activeSection === 'themes' && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="grid grid-cols-1 md:grid-cols-2 gap-6"
-              >
-                {['The Voyager', 'The minimalist', 'Neon Architect', 'The Executive'].map((theme, idx) => (
-                  <Card key={theme} variant="glass" className="p-0 overflow-hidden group cursor-pointer border-white/5 hover:border-brand-violet/40 transition-all">
-                    <div className={`h-32 bg-gradient-to-br ${idx % 2 === 0 ? 'from-brand-violet/20 to-void-indigo' : 'from-voice-amber/20 to-void-indigo'} relative`}>
-                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <Button size="sm">Select Theme</Button>
-                       </div>
-                    </div>
-                    <div className="p-6">
-                      <h4 className="text-lg font-display font-bold mb-1">{theme}</h4>
-                      <p className="text-[10px] text-white/40 uppercase tracking-widest font-black">Professional Style</p>
-                    </div>
-                  </Card>
-                ))}
-              </motion.div>
-            )}
-
-            {activeSection === 'account' && (
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-                <Card variant="glass" className="space-y-6 p-8">
-                  <div><p className="text-xs font-black uppercase tracking-[0.24em] text-[var(--accent)]">Signed-in account</p><h2 className="mt-2 font-display text-2xl font-bold text-[var(--text)]">Account Details</h2></div>
-                  <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5"><p className="text-xs font-bold uppercase tracking-widest text-[var(--muted)]">Email address</p><p className="mt-2 text-lg font-semibold text-[var(--text)]">{user?.email || 'No email available'}</p></div>
-                  <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5"><p className="text-xs font-bold uppercase tracking-widest text-[var(--muted)]">Account status</p><p className="mt-2 text-lg font-semibold text-[var(--text)]">{user?.email_confirmed_at ? 'Email verified' : 'Email verification pending'}</p></div>
-                  <Button variant="ghost" onClick={() => void signOut()}>Sign out</Button>
-                </Card>
-              </motion.div>
-            )}
-
-            {activeSection === 'security' && (
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                <Card variant="glass" className="space-y-6 p-8">
-                  <div><p className="text-xs font-black uppercase tracking-[0.24em] text-[var(--accent)]">Security & Privacy</p><h2 className="mt-2 font-display text-2xl font-bold text-[var(--text)]">Keep your career data protected</h2></div>
-                  <div className="grid gap-4 sm:grid-cols-2"><div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5"><Shield size={20} className="text-[var(--accent)]" /><h3 className="mt-3 font-display font-bold text-[var(--text)]">Email verification</h3><p className="mt-2 text-sm text-[var(--muted)]">{user?.email_confirmed_at ? 'Your email address is verified.' : 'Verify your email to secure account recovery.'}</p></div><div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5"><User size={20} className="text-[var(--accent)]" /><h3 className="mt-3 font-display font-bold text-[var(--text)]">Private account</h3><p className="mt-2 text-sm text-[var(--muted)]">Your account is private. Profile sharing is not enabled.</p></div></div>
-                  <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5"><h3 className="font-display font-bold text-[var(--text)]">Password and sessions</h3><p className="mt-2 text-sm leading-6 text-[var(--muted)]">Use a unique password. Resetting your password sends a secure recovery link to your verified email.</p><Button className="mt-4" variant="secondary" onClick={() => void sendPasswordReset()}>Send password reset email</Button></div>
-                  <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5"><h3 className="font-display font-bold text-[var(--text)]">Your data</h3><p className="mt-2 text-sm leading-6 text-[var(--muted)]">VoiceCV currently keeps generated work in the active browser session. Cloud profile and document storage will become available once the database migration is applied.</p></div>
-                  {securityMessage && <p role="status" className="rounded-xl bg-[var(--accent-soft)] p-3 text-sm text-[var(--text)]">{securityMessage}</p>}
-                </Card>
-              </motion.div>
-            )}
-
-            <div className="flex justify-end pt-8 border-t border-white/5">
-              <Button className="px-10 h-14 rounded-2xl shadow-glow">
-                <Save size={18} className="mr-2" />
-                Save Changes
-              </Button>
+        {section === 'defaults' && (
+          <Card variant="solid" padding="lg" className="space-y-6">
+            <div>
+              <h2 className="font-display text-2xl font-bold text-[var(--text)]">Writing defaults</h2>
+              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">These are the tone and resume template selected when you start a new story. Current saved defaults are {saved.tone} and {saved.resumeTemplate}.</p>
             </div>
-          </div>
-        </main>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-[var(--muted)]">Tone</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {tones.map((item) => (
+                  <button key={item.id} type="button" aria-pressed={tone === item.id} onClick={() => updateTone(item.id)} className={`rounded-2xl border px-4 py-3 text-left text-sm ${tone === item.id ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--text)]' : 'border-[var(--border)] text-[var(--muted)]'}`}>
+                    <span className="block font-bold">{item.label}</span>
+                    <span className="mt-1 block text-xs">{item.description}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-[var(--muted)]">Resume template</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {templates.map((item) => (
+                  <button key={item.id} type="button" aria-pressed={resumeTemplate === item.id} onClick={() => updateTemplate(item.id)} className={`rounded-full border px-4 py-2 text-sm font-bold ${resumeTemplate === item.id ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--text)]' : 'border-[var(--border)] text-[var(--muted)]'}`}>
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <p className="text-sm text-[var(--muted)]">Resume paper color and type live on the <Link className="font-bold text-[var(--accent)]" to="/themes">Themes</Link> page. This browser is on the {plan} plan. Application packs, voice interviews, and themed files are on the <Link className="font-bold text-[var(--accent)]" to="/upgrade">Premium</Link> page.</p>
+            <Button variant="secondary" onClick={() => { window.localStorage.removeItem('voicecv-onboarding-seen'); window.dispatchEvent(new Event('voicecv-open-tour')); }}>Replay the intro</Button>
+          </Card>
+        )}
+
+        {section === 'account' && (
+          <Card variant="solid" padding="lg" className="space-y-5">
+            <div className="flex items-center gap-3">
+              <User size={20} className="text-[var(--accent)]" />
+              <h2 className="font-display text-2xl font-bold text-[var(--text)]">Account</h2>
+            </div>
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-5">
+              <p className="text-xs font-bold uppercase tracking-widest text-[var(--muted)]">Email</p>
+              <p className="mt-2 text-lg font-semibold text-[var(--text)]">{user?.email || 'No email available'}</p>
+            </div>
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-5">
+              <p className="text-xs font-bold uppercase tracking-widest text-[var(--muted)]">Status</p>
+              <p className="mt-2 text-lg font-semibold text-[var(--text)]">{user?.email_confirmed_at ? 'Email verified' : 'Email verification pending'}</p>
+            </div>
+            <Button variant="ghost" onClick={() => void signOut()}>Sign out</Button>
+          </Card>
+        )}
+
+        {section === 'privacy' && (
+          <Card variant="solid" padding="lg" className="space-y-5">
+            <div className="flex items-center gap-3">
+              <Shield size={20} className="text-[var(--accent)]" />
+              <h2 className="font-display text-2xl font-bold text-[var(--text)]">Privacy</h2>
+            </div>
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-5">
+              <h3 className="font-display font-bold text-[var(--text)]">Password</h3>
+              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">A reset link goes to the email on this account.</p>
+              <Button className="mt-4" variant="secondary" onClick={() => void sendPasswordReset()}>Send password reset email</Button>
+            </div>
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-5">
+              <h3 className="font-display font-bold text-[var(--text)]">Local draft</h3>
+              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">The draft stores your role, job description, tone, template, and transcript in this browser. Vault documents on your account stay in place.</p>
+              <Button className="mt-4" variant="secondary" onClick={() => { clearVoiceDraft(); setNotice('Local draft deleted from this browser.'); }}>Delete local draft</Button>
+            </div>
+          </Card>
+        )}
       </div>
     </div>
   );

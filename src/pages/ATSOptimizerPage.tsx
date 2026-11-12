@@ -1,17 +1,21 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Target, Search, ArrowRight, CheckCircle2, XCircle, RefreshCw, Sparkles, FileText, Copy } from 'lucide-react';
+import { Target, Search, ArrowRight, CheckCircle2, XCircle, RefreshCw, Sparkles, FileText, Copy, AlertTriangle, TrendingUp, Lightbulb, ChevronDown, ChevronUp } from 'lucide-react';
 import { useVoiceCVStore } from '../store/useVoiceCVStore';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { analyzeATSMatch, ATSAnalysis } from '../lib/gemini';
+import { canUseFreeAction, recordFreeAction } from '../store/usePlanStore';
+import { useNavigate } from 'react-router-dom';
 
 export default function ATSOptimizerPage({ onToast }: { onToast: (msg: string, v: 'success' | 'error' | 'info') => void }) {
-  const { assets } = useVoiceCVStore();
+  const { assets, updateAssetField } = useVoiceCVStore();
+  const navigate = useNavigate();
   const [jobDescription, setJobDescription] = useState('');
   const [analysis, setAnalysis] = useState<ATSAnalysis | null>(null);
   const [loading, setLoading] = useState(false);
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
   const handleAnalyze = async () => {
     if (!assets?.resume || !jobDescription.trim()) {
@@ -38,6 +42,19 @@ export default function ATSOptimizerPage({ onToast }: { onToast: (msg: string, v
       navigator.clipboard.writeText(analysis.missingKeywords.join(', '));
       onToast('Missing keywords copied to clipboard.', 'success');
     }
+  };
+
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return 'text-green-400';
+    if (score >= 60) return 'text-yellow-400';
+    return 'text-red-400';
+  };
+
+  const getScoreLabel = (score: number) => {
+    if (score >= 80) return 'Excellent';
+    if (score >= 60) return 'Good';
+    if (score >= 40) return 'Needs Improvement';
+    return 'Poor';
   };
 
   return (
@@ -127,6 +144,18 @@ export default function ATSOptimizerPage({ onToast }: { onToast: (msg: string, v
                         <p className="text-sm text-[var(--muted)]">{item.bullet}</p>
                         <p className="text-xs font-bold uppercase tracking-widest text-green-400">Suggested</p>
                         <p className="text-sm text-[var(--text)]">{item.suggestion}</p>
+                        <Button size="sm" variant="secondary" onClick={() => {
+                          if (!assets?.resume) return;
+                          if (!canUseFreeAction('atsLines')) {
+                            onToast('The first applied line is free. More line rewrites are Premium.', 'info');
+                            navigate('/upgrade');
+                            return;
+                          }
+                          const next = assets.resume.includes(item.bullet) ? assets.resume.replace(item.bullet, item.suggestion) : `${assets.resume}\n- ${item.suggestion}`;
+                          updateAssetField('resume', next);
+                          recordFreeAction('atsLines');
+                          onToast('That line is now in the resume.', 'success');
+                        }}>Use this line</Button>
                       </div>
                     ))}
                   </div>

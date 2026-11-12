@@ -23,7 +23,7 @@ export function PageWrapper({ children, className, variant = 'default' }: PageWr
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.3, ease: 'easeOut' }}
         className={cn(
-          "min-h-screen pt-20 pb-12 sm:pt-24 sm:pb-16 lg:pt-28 lg:pb-20 w-full",
+          "min-h-screen min-w-0 pt-20 pb-12 sm:pt-24 sm:pb-16 lg:pt-28 lg:pb-20 w-full",
           variants[variant],
           className
         )}

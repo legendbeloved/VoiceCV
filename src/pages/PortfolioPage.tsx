@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import Markdown from 'react-markdown';
 import { useVoiceCVStore } from '../store/useVoiceCVStore';
+import { getPublishedPortfolio, publishPortfolio, unpublishPortfolio, type PortfolioVisibility } from '../lib/publishedPortfolios';
+import { usePlanStore } from '../store/usePlanStore';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
@@ -25,9 +27,30 @@ const PORTFOLIO_THEMES: Array<{ id: PortfolioTheme; name: string; colors: string
 export default function PortfolioPage() {
   const { id } = useParams();
   const { assets } = useVoiceCVStore();
+  const plan = usePlanStore((state) => state.plan);
+  const published = id ? getPublishedPortfolio(id) : null;
+  const [visibility, setVisibility] = useState<PortfolioVisibility>('resume');
+  const [publicLink, setPublicLink] = useState('');
   const [activeTab, setActiveTab] = useState<'resume' | 'coverLetter' | 'linkedin'>('resume');
   const [portfolioTheme, setPortfolioTheme] = useState<PortfolioTheme>('dark');
   const [showThemePicker, setShowThemePicker] = useState(false);
+
+  if (published) {
+    const showLetter = published.visibility !== 'resume';
+    const showContact = published.visibility === 'contact';
+    return (
+      <div className="mx-auto max-w-3xl space-y-6">
+        <header>
+          <h1 className="font-display text-4xl font-extrabold text-[var(--text)]">{published.assets.name}</h1>
+          <p className="mt-2 text-lg text-[var(--accent)]">{published.assets.role}</p>
+          {showContact && <p className="mt-2 text-sm text-[var(--muted)]">{published.assets.contactInfo.email}</p>}
+        </header>
+        <Card padding="lg"><article className="markdown-body"><Markdown>{published.assets.resume}</Markdown></article></Card>
+        {showLetter && <Card padding="lg"><article className="markdown-body"><Markdown>{published.assets.linkedinBio}</Markdown></article></Card>}
+        <Button variant="ghost" onClick={() => { unpublishPortfolio(published.id); window.location.href = '/portfolio'; }}>Unpublish</Button>
+      </div>
+    );
+  }
 
   if (!assets) {
     return (
@@ -167,6 +190,19 @@ export default function PortfolioPage() {
                 </div>
               )}
             </div>
+            <Button variant="secondary" onClick={() => {
+              if (plan !== 'premium') { window.location.href = '/upgrade'; return; }
+              const item = publishPortfolio(assets, visibility);
+              const link = `${window.location.origin}/portfolio/${item.id}`;
+              setPublicLink(link);
+              navigator.clipboard?.writeText(link);
+            }}>Publish link</Button>
+            <select aria-label="Portfolio visibility" value={visibility} onChange={(event) => setVisibility(event.target.value as PortfolioVisibility)} className="rounded-xl border border-[var(--border)] bg-[var(--panel)] px-3 text-sm text-[var(--text)]">
+              <option value="resume">Resume only</option>
+              <option value="resume-bio">Resume and bio</option>
+              <option value="contact">Include contact</option>
+            </select>
+            {publicLink && <p className="w-full text-sm text-[var(--muted)]">Public link copied: {publicLink}</p>}
             <Button onClick={handleExportHTML} leftIcon={<Globe size={16} />}>Export HTML</Button>
             <Button onClick={handleExportMarkdown} leftIcon={<Download size={16} />}>Export MD</Button>
           </div>

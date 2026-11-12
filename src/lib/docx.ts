@@ -12,6 +12,7 @@ import {
 } from 'docx';
 import { saveAs } from 'file-saver';
 import type { CareerAssets } from './gemini';
+import { isPremiumPlan } from '../store/usePlanStore';
 import type { IRunOptions } from 'docx';
 
 type DocumentKind = 'resume' | 'coverLetter' | 'linkedinBio' | 'interviewPrep';
@@ -306,7 +307,7 @@ export async function generateCareerDocx(
   const children = [
     ...buildOpening(kind, content, candidateName, assets),
     ...parseStructuredContent(content, { skipFirstLine }),
-    footerParagraph(candidateName, kind, content),
+    ...(isPremiumPlan() ? [] : [footerParagraph(candidateName, kind, content)]),
   ];
 
   const doc = new Document({
