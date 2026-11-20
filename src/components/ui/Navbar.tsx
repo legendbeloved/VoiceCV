@@ -11,33 +11,12 @@ interface NavbarProps {
   onThemeToggle: () => void;
 }
 
-const groups = [
-  {
-    label: 'Create',
-    links: [
-      { label: 'Record', href: '/record' },
-      { label: 'Import', href: '/import' },
-    ],
-  },
-  {
-    label: 'Improve',
-    links: [
-      { label: 'ATS', href: '/ats-optimizer' },
-      { label: 'Cover letter', href: '/cover-letter' },
-      { label: 'Career path', href: '/career-path' },
-      { label: 'Interview', href: '/interview' },
-    ],
-  },
-  {
-    label: 'Library',
-    links: [
-      { label: 'Profiles', href: '/profiles' },
-      { label: 'Vault', href: '/vault' },
-      { label: 'Themes', href: '/themes' },
-      { label: 'Settings', href: '/settings' },
-      { label: 'Premium', href: '/upgrade' },
-    ],
-  },
+const navLinks = [
+  { label: 'Record', href: '/record' },
+  { label: 'ATS', href: '/ats-optimizer' },
+  { label: 'Cover letter', href: '/cover-letter' },
+  { label: 'Themes', href: '/themes' },
+  { label: 'Settings', href: '/settings' },
 ];
 
 export function Navbar({ onLogoClick, theme, onThemeToggle }: NavbarProps) {
@@ -77,28 +56,25 @@ export function Navbar({ onLogoClick, theme, onThemeToggle }: NavbarProps) {
         </div>
       </button>
 
+      {/* Desktop navigation links - always visible on xl screens */}
       <nav className="hidden xl:flex items-center gap-4" aria-label="Primary navigation">
-        {groups.map((group) => (
-          <div key={group.label} className="flex items-center gap-1">
-            <span className="mr-1 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--muted)]">{group.label}</span>
-            {group.links.map((item) => {
-              const isActive = location.pathname === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  aria-current={isActive ? 'page' : undefined}
-                  className={`rounded-lg px-2.5 py-2 text-[11px] font-bold transition-all duration-200 ${isActive ? 'bg-[var(--accent-soft)] text-[var(--text)] ring-1 ring-[var(--accent)]/45' : 'text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--text)]'}`}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </div>
-        ))}
+        {navLinks.map((item) => {
+          const isActive = location.pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              to={item.href}
+              aria-current={isActive ? 'page' : undefined}
+              className={`rounded-lg px-2.5 py-2 text-[11px] font-bold transition-all duration-200 ${isActive ? 'bg-[var(--accent-soft)] text-[var(--text)] ring-1 ring-[var(--accent)]/45' : 'text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--text)]'}`}
+            >
+              {item.label}
+            </Link>
+          );
+        })}
       </nav>
 
-      <div className="flex items-center gap-2 sm:gap-3">
+      {/* Tablet + mobile toggle - no upgrade button */}
+      <div className="flex items-center gap-2 sm:gap-3 xl:hidden">
         <Button
           variant="icon"
           aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
@@ -109,7 +85,7 @@ export function Navbar({ onLogoClick, theme, onThemeToggle }: NavbarProps) {
         </Button>
         <Link to="/record" className="hidden sm:block">
           <Button size="sm" leftIcon={<Sparkles size={14} />}>
-            Start
+            Record your story
           </Button>
         </Link>
         <Button
@@ -143,25 +119,17 @@ export function Navbar({ onLogoClick, theme, onThemeToggle }: NavbarProps) {
               className="fixed left-3 right-3 top-24 z-[80] max-h-[calc(100dvh-7rem)] overflow-y-auto rounded-3xl border border-[var(--border)] p-4 shadow-[var(--shadow)] xl:hidden"
               aria-label="Mobile navigation"
             >
-              {groups.map((group) => (
-                <div key={group.label} className="mb-4">
-                  <p className="px-2 pb-2 text-[10px] font-black uppercase tracking-[0.22em] text-[var(--accent)]">{group.label}</p>
-                  <div className="space-y-1">
-                    {group.links.map((item) => {
-                      const isActive = location.pathname === item.href;
-                      return (
-                        <Link
-                          key={item.href}
-                          to={item.href}
-                          onClick={() => setIsMenuOpen(false)}
-                          aria-current={isActive ? 'page' : undefined}
-                          className={`block rounded-xl px-3 py-3 text-sm font-bold ${isActive ? 'bg-[var(--accent-soft)] text-[var(--text)]' : 'text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--text)]'}`}
-                        >
-                          {item.label}
-                        </Link>
-                      );
-                    })}
-                  </div>
+              {navLinks.map((item) => (
+                <div key={item.label} className="mb-4">
+                  <p className="px-2 pb-2 text-[10px] font-black uppercase tracking-[0.22em] text-[var(--accent)]">{item.label}</p>
+                  <Link
+                    to={item.href}
+                    onClick={() => setIsMenuOpen(false)}
+                    aria-current="page"
+                    className={`block rounded-xl px-3 py-3 text-sm font-bold ${location.pathname === item.href ? 'bg-[var(--accent-soft)] text-[var(--text)]' : 'text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--text)]'}`}
+                  >
+                    {item.label}
+                  </Link>
                 </div>
               ))}
               <Link to="/record" onClick={() => setIsMenuOpen(false)} className="block">
