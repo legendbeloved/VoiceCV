@@ -104,7 +104,18 @@ export default function App() {
     }
 
     // Apply theme classes to HTML element
-    document.documentElement.dataset.resumeTheme = window.localStorage.getItem('voicecv-resume-theme') || 'voyager';
+    const resumeTheme = window.localStorage.getItem('voicecv-resume-theme') || 'voyager';
+    document.documentElement.dataset.resumeTheme = resumeTheme;
+    if (resumeTheme === 'custom') {
+      try {
+        const custom = JSON.parse(window.localStorage.getItem('voicecv-custom-resume-theme') || '');
+        document.documentElement.style.setProperty('--resume-paper', custom.paper);
+        document.documentElement.style.setProperty('--resume-ink', custom.ink);
+        document.documentElement.style.setProperty('--resume-accent', custom.accent);
+      } catch {
+        document.documentElement.dataset.resumeTheme = 'voyager';
+      }
+    }
     document.documentElement.classList.toggle('theme-light', theme === 'light');
     document.documentElement.classList.toggle('theme-dark', theme === 'dark');
     document.querySelector('meta[name="theme-color"]')?.setAttribute(

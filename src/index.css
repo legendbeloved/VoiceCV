@@ -606,6 +606,73 @@ main label {
   color: #9a3412;
 }
 
+[data-resume-theme="harbor"] .resume-sheet {
+  background: #f3f7f8;
+  color: #14343c;
+  border-color: #c9dde1;
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+[data-resume-theme="harbor"] .resume-sheet h1,
+[data-resume-theme="harbor"] .resume-sheet h2,
+[data-resume-theme="harbor"] .resume-sheet h3 {
+  color: #0f6e78;
+}
+
+[data-resume-theme="sage"] .resume-sheet {
+  background: #f4f7f2;
+  color: #1f2a22;
+  border-color: #d5e0d2;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+[data-resume-theme="sage"] .resume-sheet h1,
+[data-resume-theme="sage"] .resume-sheet h2,
+[data-resume-theme="sage"] .resume-sheet h3 {
+  color: #3f6b4a;
+}
+
+[data-resume-theme="ink"] .resume-sheet {
+  background: #fffdf8;
+  color: #1a1a1a;
+  border-color: #eadfdf;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+[data-resume-theme="ink"] .resume-sheet h1,
+[data-resume-theme="ink"] .resume-sheet h2,
+[data-resume-theme="ink"] .resume-sheet h3,
+[data-resume-theme="ink"] .resume-sheet strong {
+  color: #9f1239;
+}
+
+[data-resume-theme="dusk"] .resume-sheet {
+  background: #f8f1f6;
+  color: #2a1b2e;
+  border-color: #ead5e3;
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+[data-resume-theme="dusk"] .resume-sheet h1,
+[data-resume-theme="dusk"] .resume-sheet h2,
+[data-resume-theme="dusk"] .resume-sheet h3 {
+  color: #7c3a5f;
+}
+
+[data-resume-theme="custom"] .resume-sheet {
+  background: var(--resume-paper, #fffdf8);
+  color: var(--resume-ink, #1a1a1a);
+  border-color: color-mix(in srgb, var(--resume-accent, #1e4fc7) 28%, #ffffff);
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+[data-resume-theme="custom"] .resume-sheet h1,
+[data-resume-theme="custom"] .resume-sheet h2,
+[data-resume-theme="custom"] .resume-sheet h3,
+[data-resume-theme="custom"] .resume-sheet strong {
+  color: var(--resume-accent, #1e4fc7);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
