@@ -29,6 +29,8 @@ import { LoginPage } from './pages/LoginPage';
 import { RequireAuth } from './auth/RequireAuth';
 import { useAuth } from './auth/AuthProvider';
 import { saveGeneratedCareerSession } from './lib/careerData';
+import { SideMenu } from './components/ui/SideMenu';
+import { cn } from './lib/utils';
 
 export type ThemeMode = 'light' | 'dark';
 
@@ -54,6 +56,8 @@ export default function App() {
     }
     return window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
   });
+
+  const [isSideMenuOpen, setIsSideMenuOpen] = useState(false);
 
   useEffect(() => {
     const setThemeFromSupabase = async () => {
@@ -228,6 +232,8 @@ export default function App() {
         onLogoClick={handleReset}
         theme={theme}
         onThemeToggle={() => setTheme((current) => current === 'dark' ? 'light' : 'dark')}
+        isSideMenuOpen={isSideMenuOpen}
+        onToggleSideMenu={setIsSideMenuOpen}
       />
       
       <main id="main-content" className="flex-1 flex flex-col focus:outline-none" tabIndex={-1}>
@@ -259,6 +265,16 @@ export default function App() {
 
       <Footer />
       <ToastContainer toasts={toasts} onClose={removeToast} />
+      
+      {/* Side Menu - visible on desktop, toggleable on mobile */}
+      <SideMenu
+        isOpen={isSideMenuOpen}
+        setIsOpen={setIsSideMenuOpen}
+        user={user ? { name: user.name || 'User' } : undefined}
+        onLogout={() => {
+          // Handle logout
+        }}
+      />
     </div>
   );
 }

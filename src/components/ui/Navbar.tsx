@@ -9,6 +9,8 @@ interface NavbarProps {
   onLogoClick: () => void;
   theme: ThemeMode;
   onThemeToggle: () => void;
+  isSideMenuOpen: boolean;
+  onToggleSideMenu: (open: boolean) => void;
 }
 
 const groups = [
@@ -40,7 +42,7 @@ const groups = [
   },
 ];
 
-export function Navbar({ onLogoClick, theme, onThemeToggle }: NavbarProps) {
+export function Navbar({ onLogoClick, theme, onThemeToggle, isSideMenuOpen, onToggleSideMenu }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -108,10 +110,18 @@ export function Navbar({ onLogoClick, theme, onThemeToggle }: NavbarProps) {
           {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
         </Button>
         <Link to="/record" className="hidden sm:block">
-          <Button size="sm" leftIcon={<Sparkles size={14} />}>
+          <Button size="sm" leftIcon={<Sparkles size={14} }>
             Start
           </Button>
         </Link>
+        <Button
+          variant="outline"
+          size="sm"
+          className="hidden xl:inline-block"
+          onClick={() => onToggleSideMenu(true)}
+        >
+          Menu
+        </Button>
         <Button
           variant="icon"
           className="xl:hidden"
@@ -165,7 +175,7 @@ export function Navbar({ onLogoClick, theme, onThemeToggle }: NavbarProps) {
                 </div>
               ))}
               <Link to="/record" onClick={() => setIsMenuOpen(false)} className="block">
-                <Button className="w-full" leftIcon={<Sparkles size={16} />}>Record your story</Button>
+                <Button className="w-full" leftIcon={<Sparkles size={16} }>Record your story</Button>
               </Link>
             </motion.nav>
           </>
