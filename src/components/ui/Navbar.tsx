@@ -110,7 +110,7 @@ export function Navbar({ onLogoClick, theme, onThemeToggle, isSideMenuOpen, onTo
           {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
         </Button>
         <Link to="/record" className="hidden sm:block">
-          <Button size="sm" leftIcon={<Sparkles size={14} }>
+          <Button size="sm" leftIcon={<Sparkles size={14} />}>
             Start
           </Button>
         </Link>
