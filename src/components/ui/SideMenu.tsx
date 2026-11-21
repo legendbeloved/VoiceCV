@@ -2,7 +2,7 @@ import React from 'react';
 import { Menu, X, Sparkles } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from './Button';
-import { useVoiceCVStore } from '../store/useVoiceCVStore';
+import { useVoiceCVStore } from '../../store/useVoiceCVStore';
 
 interface SideMenuProps {
   isOpen: boolean;
