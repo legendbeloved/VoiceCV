@@ -175,7 +175,7 @@ export function Navbar({ onLogoClick, theme, onThemeToggle, isSideMenuOpen, onTo
                 </div>
               ))}
               <Link to="/record" onClick={() => setIsMenuOpen(false)} className="block">
-                <Button className="w-full" leftIcon={<Sparkles size={16} }>Record your story</Button>
+                <Button className="w-full" leftIcon={<Sparkles size={16} />}>Record your story</Button>
               </Link>
             </motion.nav>
           </>
