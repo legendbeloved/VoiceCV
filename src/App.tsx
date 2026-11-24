@@ -36,7 +36,7 @@ export type ThemeMode = 'light' | 'dark';
 
 export default function App() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const store = useVoiceCVStore();
   const setProcessingStep = store.setProcessingStep;
   const setProcessingError = store.setProcessingError;
@@ -270,9 +270,9 @@ export default function App() {
       <SideMenu
         isOpen={isSideMenuOpen}
         setIsOpen={setIsSideMenuOpen}
-        user={user ? { name: user.name || 'User' } : undefined}
+        user={user ? { name: user.user_metadata?.full_name || user.email || 'User' } : null}
         onLogout={() => {
-          // Handle logout
+          void signOut();
         }}
       />
     </div>

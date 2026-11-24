@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, X, Sparkles } from 'lucide-react';
+import { Menu, X, Sparkles, Mic2 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from './Button';
 import { useVoiceCVStore } from '../../store/useVoiceCVStore';
@@ -7,10 +7,11 @@ import { useVoiceCVStore } from '../../store/useVoiceCVStore';
 interface SideMenuProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
+  user?: { name: string } | null;
   onLogout?: () => void;
 }
 
-export function SideMenu({ isOpen, setIsOpen, onLogout }: SideMenuProps) {
+export function SideMenu({ isOpen, setIsOpen, user, onLogout }: SideMenuProps) {
   const navigate = useLocation();
   const store = useVoiceCVStore();
   const assets = store.assets;
