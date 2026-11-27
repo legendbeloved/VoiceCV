@@ -119,7 +119,13 @@ export default function ThemesPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12">
         {themes.map((theme, idx) => (
-          <motion.div key={theme.id} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }}>
+          <motion.div
+  key={theme.id}
+  initial={{ opacity: 0, y: 30 }}
+  animate={{ opacity: 1, y: 0 }}
+  whileHover={{ scale: 1.03 }}
+  whileTap={{ scale: 0.98 }}
+  transition={{ type: "spring", damping: 15, stiffness: 120, delay: idx * 0.05 }}>
             <GlassPanel className="p-0 overflow-hidden group border-white/10 hover:border-brand-violet/50 transition-all shadow-2xl">
               <div className="grid grid-cols-1 md:grid-cols-5 h-full min-h-[340px]">
                 <div className="md:col-span-2 p-4">

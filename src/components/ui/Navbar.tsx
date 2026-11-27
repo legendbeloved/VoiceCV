@@ -15,29 +15,25 @@ interface NavbarProps {
 
 const groups = [
   {
-    label: 'Create',
+    label: 'Make',
     links: [
       { label: 'Record', href: '/record' },
-      { label: 'Import', href: '/import' },
     ],
   },
   {
-    label: 'Improve',
+    label: 'Level up',
     links: [
       { label: 'ATS', href: '/ats-optimizer' },
       { label: 'Cover letter', href: '/cover-letter' },
-      { label: 'Career path', href: '/career-path' },
-      { label: 'Interview', href: '/interview' },
     ],
   },
   {
-    label: 'Library',
+    label: 'My resources',
     links: [
-      { label: 'Profiles', href: '/profiles' },
-      { label: 'Vault', href: '/vault' },
       { label: 'Themes', href: '/themes' },
       { label: 'Settings', href: '/settings' },
-      { label: 'Premium', href: '/upgrade' },
+      { label: 'Profiles', href: '/profiles' },
+      { label: 'Vault', href: '/vault' },
     ],
   },
 ];
@@ -110,8 +106,8 @@ export function Navbar({ onLogoClick, theme, onThemeToggle, isSideMenuOpen, onTo
           {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
         </Button>
         <Link to="/record" className="hidden sm:block">
-          <Button size="sm" leftIcon={<Sparkles size={14} />}>
-            Start
+          <Button size="sm" leftIcon={<Sparkles size={14} }>
+            Record your story
           </Button>
         </Link>
         <Button
@@ -175,7 +171,7 @@ export function Navbar({ onLogoClick, theme, onThemeToggle, isSideMenuOpen, onTo
                 </div>
               ))}
               <Link to="/record" onClick={() => setIsMenuOpen(false)} className="block">
-                <Button className="w-full" leftIcon={<Sparkles size={16} />}>Record your story</Button>
+                <Button className="w-full" leftIcon={<Sparkles size={16} }>Record your story</Button>
               </Link>
             </motion.nav>
           </>
