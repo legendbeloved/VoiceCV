@@ -189,7 +189,9 @@ export default function LiveResumePreview({ content, onSave, onCancel }: LiveRes
         ) : (
           <div className="flex-1 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 overflow-auto prose prose-sm max-w-none text-[var(--text)]">
             <div className="prose prose-sm max-w-none text-[var(--text)]">
-              <Markdown>{editableContent}</Markdown>
+              <Markdown className="prose prose-sm max-w-none text-[var(--text)]">
+              {editableContent}
+            </Markdown>
             </div>
           </div>
         )}
