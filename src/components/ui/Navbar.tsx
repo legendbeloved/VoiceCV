@@ -106,7 +106,7 @@ export function Navbar({ onLogoClick, theme, onThemeToggle, isSideMenuOpen, onTo
           {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
         </Button>
         <Link to="/record" className="hidden sm:block">
-          <Button size="sm" leftIcon={<Sparkles size={14} }>
+          <Button size="sm" leftIcon={<Sparkles size={14} />}>
             Record your story
           </Button>
         </Link>
@@ -171,7 +171,7 @@ export function Navbar({ onLogoClick, theme, onThemeToggle, isSideMenuOpen, onTo
                 </div>
               ))}
               <Link to="/record" onClick={() => setIsMenuOpen(false)} className="block">
-                <Button className="w-full" leftIcon={<Sparkles size={16} }>Record your story</Button>
+                <Button className="w-full" leftIcon={<Sparkles size={16} />}>Record your story</Button>
               </Link>
             </motion.nav>
           </>
