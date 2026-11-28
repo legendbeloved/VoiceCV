@@ -1,0 +1,7 @@
+# Vercel ignore file
+# Prevent caching of problematic files
+node_modules
+dist
+*.log
+.env.local
+.env.*.local
